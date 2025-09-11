@@ -1,3 +1,9 @@
+ARMSOM-FORGE1-RK3506J
+M:	Jonas Karlman <jonas@kwiboo.se>
+S:	Maintained
+F:	arch/arm/dts/rk3506j-armsom-forge1*
+F:	configs/forge1-rk3506j_defconfig
+
 GENERIC-RK3506
 M:	Jonas Karlman <jonas@kwiboo.se>
 S:	Maintained
