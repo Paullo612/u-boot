@@ -315,28 +315,6 @@ int checkboard(void)
 	return 0;
 }
 
-static int fdt_path_del_node(void *fdt, const char *path)
-{
-	int nodeoffset;
-
-	nodeoffset = fdt_path_offset(fdt, path);
-	if (nodeoffset < 0)
-		return nodeoffset;
-
-	return fdt_del_node(fdt, nodeoffset);
-}
-
-static int fdt_path_set_name(void *fdt, const char *path, const char *name)
-{
-	int nodeoffset;
-
-	nodeoffset = fdt_path_offset(fdt, path);
-	if (nodeoffset < 0)
-		return nodeoffset;
-
-	return fdt_set_name(fdt, nodeoffset, name);
-}
-
 /*
  * RK3582 is a variant of the RK3588S with some IP blocks disabled. What blocks
  * are disabled/non-working is indicated by ip-state in OTP. ft_system_setup()
@@ -358,9 +336,6 @@ int ft_system_setup(void *blob, struct bd_info *bd)
 	char soc_comp[16];
 	const char *comp;
 	void *data;
-
-	if (!IS_ENABLED(CONFIG_OF_SYSTEM_SETUP))
-		return 0;
 
 	if (!IS_ENABLED(CONFIG_ROCKCHIP_OTP) || !CONFIG_IS_ENABLED(MISC))
 		return -ENOSYS;
@@ -421,18 +396,24 @@ int ft_system_setup(void *blob, struct bd_info *bd)
 	/* cpu cluster1: ip_state[0]: bit4~5 */
 	if ((ip_state[0] & FAIL_CPU_CLUSTER1) == FAIL_CPU_CLUSTER1) {
 		log_debug("remove cpu-map cluster1\n");
-		fdt_path_del_node(blob, "/cpus/cpu-map/cluster1");
+		node = fdt_path_offset(blob, "/cpus/cpu-map/cluster1");
+		if (node >= 0)
+			fdt_del_node(blob, node);
 		cluster1_removed = true;
 	}
 
 	/* cpu cluster2: ip_state[0]: bit6~7 */
 	if ((ip_state[0] & FAIL_CPU_CLUSTER2) == FAIL_CPU_CLUSTER2) {
 		log_debug("remove cpu-map cluster2\n");
-		fdt_path_del_node(blob, "/cpus/cpu-map/cluster2");
+		node = fdt_path_offset(blob, "/cpus/cpu-map/cluster2");
+		if (node >= 0)
+			fdt_del_node(blob, node);
 	} else if (cluster1_removed) {
 		/* cluster nodes must be named in a continuous series */
 		log_debug("rename cpu-map cluster2\n");
-		fdt_path_set_name(blob, "/cpus/cpu-map/cluster2", "cluster1");
+		node = fdt_path_offset(blob, "/cpus/cpu-map/cluster2");
+		if (node >= 0)
+			fdt_set_name(blob, node, "cluster1");
 	}
 
 	/* gpu: ip_state[1]: bit1~4 */
@@ -478,13 +459,18 @@ int ft_system_setup(void *blob, struct bd_info *bd)
 			continue;
 
 		node = fdt_subnode_offset(blob, parent, cpu_node_names[i]);
-		if (node >= 0) {
-			log_debug("fail cpu %s\n", cpu_node_names[i]);
-			fdt_status_fail(blob, node);
-		} else {
+		if (node < 0) {
 			log_err("Could not find %s, node=%d\n",
 				cpu_node_names[i], node);
 			return node;
+		}
+
+		log_debug("fail cpu %s\n", cpu_node_names[i]);
+		ret = fdt_status_fail(blob, node);
+		if (ret < 0) {
+			log_err("Could not fail %s, ret=%d\n",
+				cpu_node_names[i], ret);
+			return ret;
 		}
 	}
 
@@ -494,8 +480,10 @@ int ft_system_setup(void *blob, struct bd_info *bd)
 		return node;
 	}
 
+	/* ensure compatible ends with rockchip,rk3582, rockchip,rk3588s */
 	snprintf(soc_comp, sizeof(soc_comp), "rockchip,rk35%x", cpu_code[1]);
 
+	/* look for existing soc compatible, anything before is kept as-is */
 	for (i = 0, comp_len = 0;
 	     (comp = fdt_stringlist_get(blob, node, "compatible", i, &len));
 	     i++) {
