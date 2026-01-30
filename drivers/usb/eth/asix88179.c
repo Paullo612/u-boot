@@ -558,6 +558,7 @@ static int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 	struct ueth_data *ueth = &priv->ueth;
 	int ret, len;
 	u16 pkt_len;
+	u32 pkt_hdr;
 
 	/* No packet left, get a new one */
 	if (priv->pkt_cnt == 0) {
@@ -582,33 +583,28 @@ static int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 
 		if (len < 4) {
 			usb_ether_advance_rxbuf(ueth, -1);
-			return -EMSGSIZE;
-		}
-
-		rx_hdr = *(u32 *)(ptr + len - 4);
-		le32_to_cpus(&rx_hdr);
-
-		pkt_cnt = (u16)rx_hdr;
-		if (pkt_cnt == 0) {
-			usb_ether_advance_rxbuf(ueth, -1);
 			return 0;
 		}
 
+		rx_hdr = get_unaligned_le32(ptr + len - 4);
+		pkt_cnt = (u16)rx_hdr;
 		hdr_off = (u16)(rx_hdr >> 16);
-		if (hdr_off > len - 4) {
+
+		if (pkt_cnt == 0 || hdr_off > len - 4) {
 			usb_ether_advance_rxbuf(ueth, -1);
-			return -EIO;
+			return 0;
 		}
 
 		priv->pkt_cnt = pkt_cnt;
 		priv->pkt_data = ptr;
 		priv->pkt_hdr = (u32 *)(ptr + hdr_off);
-		debug("%s: %d packets received, pkt header at %d\n",
-		      __func__, (int)priv->pkt_cnt, (int)hdr_off);
+		debug("%s: %u packets received, pkt header at %u\n",
+		      __func__, priv->pkt_cnt, hdr_off);
 	}
 
-	le32_to_cpus(priv->pkt_hdr);
-	pkt_len = (*priv->pkt_hdr >> 16) & 0x1fff;
+	pkt_hdr = *priv->pkt_hdr;
+	le32_to_cpus(&pkt_hdr);
+	pkt_len = (pkt_hdr >> 16) & 0x1fff;
 
 	*packetp = priv->pkt_data + 2;
 
@@ -616,8 +612,8 @@ static int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 	priv->pkt_cnt--;
 	priv->pkt_hdr++;
 
-	debug("%s: return packet of %d bytes (%d packets left)\n",
-	      __func__, (int)pkt_len, priv->pkt_cnt);
+	debug("%s: return packet of %u bytes (%u packets left)\n",
+	      __func__, pkt_len, priv->pkt_cnt);
 	return pkt_len;
 }
 
