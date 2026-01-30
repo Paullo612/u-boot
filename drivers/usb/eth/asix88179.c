@@ -417,7 +417,7 @@ static int asix_wait_link(struct ueth_data *dev)
 }
 
 static int asix_init_common(struct ueth_data *dev,
-			struct asix_private *dev_priv)
+			    struct asix_private *dev_priv)
 {
 	u8 buf[2], tmp[5], link_sts;
 	u16 *tmp16, mode;
@@ -429,14 +429,14 @@ static int asix_init_common(struct ueth_data *dev,
 	/* Configure RX control register => start operation */
 	*tmp16 = AX_RX_CTL_DROPCRCERR | AX_RX_CTL_IPE | AX_RX_CTL_START |
 		 AX_RX_CTL_AP | AX_RX_CTL_AMALL | AX_RX_CTL_AB;
-	if (asix_write_cmd(dev, AX_ACCESS_MAC, AX_RX_CTL, 2, 2, tmp16) != 0)
+	if (asix_write_cmd(dev, AX_ACCESS_MAC, AX_RX_CTL, 2, 2, tmp16))
 		goto out_err;
 
-	if (asix_wait_link(dev) != 0) {
+	if (asix_wait_link(dev)) {
 		/*reset device and try again*/
 		printf("Reset Ethernet Device\n");
 		asix_basic_reset(dev, dev_priv);
-		if (asix_wait_link(dev) != 0)
+		if (asix_wait_link(dev))
 			goto out_err;
 	}
 
@@ -488,8 +488,8 @@ out_err:
 }
 
 static int asix_send_common(struct ueth_data *dev,
-			struct asix_private *dev_priv,
-			void *packet, int length)
+			    struct asix_private *dev_priv,
+			    void *packet, int length)
 {
 	int err;
 	u32 packet_len, tx_hdr2;
@@ -534,7 +534,7 @@ static int ax88179_eth_start(struct udevice *dev)
 	return asix_init_common(&priv->ueth, priv);
 }
 
-void ax88179_eth_stop(struct udevice *dev)
+static void ax88179_eth_stop(struct udevice *dev)
 {
 	struct asix_private *priv = dev_get_priv(dev);
 	struct ueth_data *ueth = &priv->ueth;
@@ -547,14 +547,14 @@ void ax88179_eth_stop(struct udevice *dev)
 	priv->pkt_hdr = NULL;
 }
 
-int ax88179_eth_send(struct udevice *dev, void *packet, int length)
+static int ax88179_eth_send(struct udevice *dev, void *packet, int length)
 {
 	struct asix_private *priv = dev_get_priv(dev);
 
 	return asix_send_common(&priv->ueth, priv, packet, length);
 }
 
-int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
+static int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 {
 	struct asix_private *priv = dev_get_priv(dev);
 	struct ueth_data *ueth = &priv->ueth;
@@ -634,7 +634,7 @@ static int ax88179_free_pkt(struct udevice *dev, uchar *packet, int packet_len)
 	return 0;
 }
 
-int ax88179_write_hwaddr(struct udevice *dev)
+static int ax88179_write_hwaddr(struct udevice *dev)
 {
 	struct eth_pdata *pdata = dev_get_plat(dev);
 	struct asix_private *priv = dev_get_priv(dev);
