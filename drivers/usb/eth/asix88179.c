@@ -650,6 +650,20 @@ static int ax88179_write_hwaddr(struct udevice *dev)
 	return asix_write_mac(ueth, pdata->enetaddr);
 }
 
+static int ax88179_read_rom_hwaddr(struct udevice *dev)
+{
+	struct eth_pdata *pdata = dev_get_plat(dev);
+	struct asix_private *priv = dev_get_priv(dev);
+	struct ueth_data *ueth = &priv->ueth;
+	int ret;
+
+	ret = asix_read_mac(ueth, pdata->enetaddr);
+	if (ret)
+		memset(pdata->enetaddr, 0, ETH_ALEN);
+
+	return 0;
+}
+
 static int ax88179_eth_probe(struct udevice *dev)
 {
 	struct eth_pdata *pdata = dev_get_plat(dev);
@@ -687,6 +701,7 @@ static const struct eth_ops ax88179_eth_ops = {
 	.free_pkt = ax88179_free_pkt,
 	.stop = ax88179_eth_stop,
 	.write_hwaddr = ax88179_write_hwaddr,
+	.read_rom_hwaddr = ax88179_read_rom_hwaddr,
 };
 
 U_BOOT_DRIVER(ax88179_eth) = {
