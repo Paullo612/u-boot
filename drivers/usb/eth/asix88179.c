@@ -235,7 +235,7 @@ static int asix_write_cmd(struct ueth_data *dev, u8 cmd, u16 value, u16 index,
 		size,
 		USB_CTRL_SET_TIMEOUT);
 
-	return len == size ? 0 : ECOMM;
+	return len == size ? 0 : -ECOMM;
 }
 
 static int asix_read_cmd(struct ueth_data *dev, u8 cmd, u16 value, u16 index,
@@ -260,16 +260,17 @@ static int asix_read_cmd(struct ueth_data *dev, u8 cmd, u16 value, u16 index,
 
 	memcpy(data, buf, size);
 
-	return len == size ? 0 : ECOMM;
+	return len == size ? 0 : -ECOMM;
 }
 
 static int asix_read_mac(struct ueth_data *dev, uint8_t *enetaddr)
 {
 	int ret;
 
-	ret = asix_read_cmd(dev, AX_ACCESS_MAC, AX_NODE_ID, 6, 6, enetaddr);
-	if (ret < 0)
-		debug("Failed to read MAC address: %02x\n", ret);
+	ret = asix_read_cmd(dev, AX_ACCESS_MAC, AX_NODE_ID,
+			    ETH_ALEN, ETH_ALEN, enetaddr);
+	if (ret)
+		debug("Failed to read MAC address: ret=%d\n", ret);
 
 	return ret;
 }
@@ -278,10 +279,10 @@ static int asix_write_mac(struct ueth_data *dev, uint8_t *enetaddr)
 {
 	int ret;
 
-	ret = asix_write_cmd(dev, AX_ACCESS_MAC, AX_NODE_ID, ETH_ALEN,
-				 ETH_ALEN, enetaddr);
-	if (ret < 0)
-		debug("Failed to set MAC address: %02x\n", ret);
+	ret = asix_write_cmd(dev, AX_ACCESS_MAC, AX_NODE_ID,
+			     ETH_ALEN, ETH_ALEN, enetaddr);
+	if (ret)
+		debug("Failed to set MAC address: ret=%d\n", ret);
 
 	return ret;
 }
