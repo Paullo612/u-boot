@@ -491,40 +491,38 @@ static int asix_send_common(struct ueth_data *dev,
 			    struct asix_private *dev_priv,
 			    void *packet, int length)
 {
-	int err;
-	u32 packet_len, tx_hdr2;
-	int actual_len, framesize;
-	ALLOC_CACHE_ALIGN_BUFFER(unsigned char, msg,
-				 PKTSIZE + (2 * sizeof(packet_len)));
+	u32 tx_hdr1, tx_hdr2;
+	int actual_len, ret;
+	ALLOC_CACHE_ALIGN_BUFFER(unsigned char, msg, PKTSIZE + 8);
 
 	debug("** %s(), len %d\n", __func__, length);
 
-	packet_len = length;
-	cpu_to_le32s(&packet_len);
+	/* Message format:
+	 *   <packet tx header> (8 bytes)
+	 *     <tx_hdr1>: length of packet data
+	 *     <tx_hdr2>: max seg size and flags
+	 *   <packet data>
+	 */
 
-	memcpy(msg, &packet_len, sizeof(packet_len));
-	framesize = dev_priv->maxpacketsize;
+	tx_hdr1 = length;
 	tx_hdr2 = 0;
-	if (((length + 8) % framesize) == 0)
+	if (((length + 8) % dev_priv->maxpacketsize) == 0)
 		tx_hdr2 |= 0x80008000;	/* Enable padding */
 
-	cpu_to_le32s(&tx_hdr2);
+	put_unaligned_le32(tx_hdr1, msg);
+	put_unaligned_le32(tx_hdr2, msg + 4);
+	memcpy(msg + 8, packet, length);
 
-	memcpy(msg + sizeof(packet_len), &tx_hdr2, sizeof(tx_hdr2));
+	ret = usb_bulk_msg(dev->pusb_dev,
+			   usb_sndbulkpipe(dev->pusb_dev, dev->ep_out),
+			   msg,
+			   length + 8,
+			   &actual_len,
+			   USB_BULK_SEND_TIMEOUT);
+	debug("Tx: len = %u, actual = %u, err = %d\n",
+	      length + 8, actual_len, ret);
 
-	memcpy(msg + sizeof(packet_len) + sizeof(tx_hdr2),
-	       (void *)packet, length);
-
-	err = usb_bulk_msg(dev->pusb_dev,
-				usb_sndbulkpipe(dev->pusb_dev, dev->ep_out),
-				(void *)msg,
-				length + sizeof(packet_len) + sizeof(tx_hdr2),
-				&actual_len,
-				USB_BULK_SEND_TIMEOUT);
-	debug("Tx: len = %zu, actual = %u, err = %d\n",
-	      length + sizeof(packet_len), actual_len, err);
-
-	return err;
+	return ret;
 }
 
 static int ax88179_eth_start(struct udevice *dev)
