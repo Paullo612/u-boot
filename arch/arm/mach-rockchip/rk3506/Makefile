@@ -2,4 +2,3 @@
 
 obj-y += rk3506.o
 obj-y += clk_rk3506.o
-obj-y += syscon_rk3506.o

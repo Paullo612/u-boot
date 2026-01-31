@@ -17,6 +17,7 @@
 
 const char * const boot_devices[BROM_LAST_BOOTSOURCE + 1] = {
 	[BROM_BOOTSOURCE_EMMC] = "/soc/mmc@ff480000",
+	[BROM_BOOTSOURCE_SPINOR] = "/soc/spi@ff488000/flash@0",
 	[BROM_BOOTSOURCE_SD] = "/soc/mmc@ff480000",
 };
 
@@ -34,7 +35,7 @@ int arch_cpu_init(void)
 	/* Select non-secure OTPC */
 	rk_clrreg(SGRF_BASE + 0x100, BIT(1));
 
-	/* Set the sdmmc/emmc to access ddr memory */
+	/* Set the emmc/sdmmc to access ddr memory */
 	val = readl(FIREWALL_DDR_BASE + FW_DDR_MST1_REG);
 	writel(val & 0xffff00ff, FIREWALL_DDR_BASE + FW_DDR_MST1_REG);
 
