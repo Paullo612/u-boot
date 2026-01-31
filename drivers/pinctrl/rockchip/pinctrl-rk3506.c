@@ -108,7 +108,6 @@ static int rk3506_calc_drv_reg_and_bit(struct rockchip_pin_bank *bank,
 		} else {
 			*reg = RK3506_DRV_GPIO4_OFFSET;
 			*bit = 10;
-
 			return 0;
 		}
 		break;
@@ -257,6 +256,7 @@ static int rk3506_set_pull(struct rockchip_pin_bank *bank,
 	ret = rk3506_calc_pull_reg_and_bit(bank, pin_num, &regmap, &reg, &bit);
 	if (ret)
 		return ret;
+
 	type = bank->pull_type[pin_num / 8];
 
 	if ((bank->bank_num == 0 && pin_num == 24) || bank->bank_num == 4)
