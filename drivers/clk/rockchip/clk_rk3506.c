@@ -14,7 +14,7 @@
 #include <dm/lists.h>
 #include <dt-bindings/clock/rockchip,rk3506-cru.h>
 
-#define DIV_TO_RATE(input_rate, div)    ((input_rate) / ((div) + 1))
+#define DIV_TO_RATE(input_rate, div)	((input_rate) / ((div) + 1))
 
 /*
  * [FRAC PLL]: GPLL, V0PLL, V1PLL
@@ -279,10 +279,10 @@ static ulong rk3506_bus_set_rate(struct rk3506_clk_priv *priv, ulong clk_id,
 {
 	u32 div, sel;
 
-	if (priv->v0pll_div_hz % rate == 0) {
+	if ((priv->v0pll_div_hz % rate) == 0) {
 		sel = ACLK_BUS_SEL_V0PLL_DIV;
 		div = DIV_ROUND_UP(priv->v0pll_div_hz, rate);
-	} else if (priv->v1pll_div_hz % rate == 0) {
+	} else if ((priv->v1pll_div_hz % rate) == 0) {
 		sel = ACLK_BUS_SEL_V1PLL_DIV;
 		div = DIV_ROUND_UP(priv->v1pll_div_hz, rate);
 	} else {
@@ -354,10 +354,10 @@ static ulong rk3506_peri_set_rate(struct rk3506_clk_priv *priv, ulong clk_id,
 {
 	u32 div, sel;
 
-	if (priv->v0pll_div_hz % rate == 0) {
+	if ((priv->v0pll_div_hz % rate) == 0) {
 		sel = ACLK_BUS_SEL_V0PLL_DIV;
 		div = DIV_ROUND_UP(priv->v0pll_div_hz, rate);
-	} else if (priv->v1pll_div_hz % rate == 0) {
+	} else if ((priv->v1pll_div_hz % rate) == 0) {
 		sel = ACLK_BUS_SEL_V1PLL_DIV;
 		div = DIV_ROUND_UP(priv->v1pll_div_hz, rate);
 	} else {
@@ -414,13 +414,13 @@ static ulong rk3506_sdmmc_set_rate(struct rk3506_clk_priv *priv, ulong clk_id,
 {
 	u32 div, sel;
 
-	if (OSC_HZ % rate == 0) {
+	if ((OSC_HZ % rate) == 0) {
 		sel = CCLK_SDMMC_SEL_24M;
 		div = DIV_ROUND_UP(OSC_HZ, rate);
-	} else if (priv->v0pll_hz % rate == 0) {
+	} else if ((priv->v0pll_hz % rate) == 0) {
 		sel = CCLK_SDMMC_SEL_V0PLL;
 		div = DIV_ROUND_UP(priv->v0pll_hz, rate);
-	} else if (priv->v1pll_hz % rate == 0) {
+	} else if ((priv->v1pll_hz % rate) == 0) {
 		sel = CCLK_SDMMC_SEL_V1PLL;
 		div = DIV_ROUND_UP(priv->v1pll_hz, rate);
 	} else {
@@ -463,10 +463,10 @@ static ulong rk3506_saradc_set_rate(struct rk3506_clk_priv *priv, ulong clk_id,
 {
 	u32 div, sel;
 
-	if (32000 % rate == 0) {
+	if ((32000 % rate) == 0) {
 		sel = CLK_SARADC_SEL_32K;
 		div = 1;
-	} else if (400000 % rate == 0) {
+	} else if ((400000 % rate) == 0) {
 		sel = CLK_SARADC_SEL_400K;
 		div = 1;
 	} else {
@@ -567,10 +567,10 @@ static ulong rk3506_i2c_set_rate(struct rk3506_clk_priv *priv, ulong clk_id,
 {
 	u32 div, sel;
 
-	if (priv->v0pll_hz % rate == 0) {
+	if ((priv->v0pll_hz % rate) == 0) {
 		sel = CLK_I2C_SEL_V0PLL;
 		div = DIV_ROUND_UP(priv->v0pll_hz, rate);
-	} else if (priv->v1pll_hz % rate == 0) {
+	} else if ((priv->v1pll_hz % rate) == 0) {
 		sel = CLK_I2C_SEL_V1PLL;
 		div = DIV_ROUND_UP(priv->v1pll_hz, rate);
 	} else {
@@ -649,10 +649,10 @@ static ulong rk3506_pwm_set_rate(struct rk3506_clk_priv *priv, ulong clk_id,
 			     FIELD_PREP(CLK_PWM0_DIV_MASK, div - 1));
 		break;
 	case CLK_PWM1:
-		if (priv->v0pll_hz % rate == 0) {
+		if ((priv->v0pll_hz % rate) == 0) {
 			sel = CLK_PWM1_SEL_V0PLL_DIV;
 			div = DIV_ROUND_UP(priv->v0pll_div_hz, rate);
-		} else if (priv->v1pll_hz % rate == 0) {
+		} else if ((priv->v1pll_hz % rate) == 0) {
 			sel = CLK_PWM1_SEL_V1PLL_DIV;
 			div = DIV_ROUND_UP(priv->v1pll_div_hz, rate);
 		} else {
@@ -711,13 +711,13 @@ static ulong rk3506_spi_set_rate(struct rk3506_clk_priv *priv, ulong clk_id,
 {
 	u32 div, sel;
 
-	if (OSC_HZ % rate == 0) {
+	if ((OSC_HZ % rate) == 0) {
 		sel = CLK_SPI_SEL_24M;
 		div = DIV_ROUND_UP(OSC_HZ, rate);
-	} else if (priv->v0pll_div_hz % rate == 0) {
+	} else if ((priv->v0pll_div_hz % rate) == 0) {
 		sel = CLK_SPI_SEL_V0PLL_DIV;
 		div = DIV_ROUND_UP(priv->v0pll_div_hz, rate);
-	} else if (priv->v1pll_div_hz % rate == 0) {
+	} else if ((priv->v1pll_div_hz % rate) == 0) {
 		sel = CLK_SPI_SEL_V1PLL_DIV;
 		div = DIV_ROUND_UP(priv->v1pll_div_hz, rate);
 	} else {
@@ -773,13 +773,13 @@ static ulong rk3506_fspi_set_rate(struct rk3506_clk_priv *priv, ulong rate)
 {
 	int div, sel;
 
-	if (OSC_HZ % rate == 0) {
+	if ((OSC_HZ % rate) == 0) {
 		sel = SCLK_FSPI_SEL_24M;
 		div = DIV_ROUND_UP(OSC_HZ, rate);
-	} else if (priv->v0pll_hz % rate == 0) {
+	} else if ((priv->v0pll_hz % rate) == 0) {
 		sel = SCLK_FSPI_SEL_V0PLL;
 		div = DIV_ROUND_UP(priv->v0pll_hz, rate);
-	} else if (priv->v1pll_hz % rate == 0) {
+	} else if ((priv->v1pll_hz % rate) == 0) {
 		sel = SCLK_FSPI_SEL_V1PLL;
 		div = DIV_ROUND_UP(priv->v1pll_hz, rate);
 	} else {
@@ -823,13 +823,13 @@ static ulong rk3506_vop_dclk_set_rate(struct rk3506_clk_priv *priv, ulong rate)
 {
 	int div, sel;
 
-	if (OSC_HZ % rate == 0) {
+	if ((OSC_HZ % rate) == 0) {
 		sel = DCLK_VOP_SEL_24M;
 		div = DIV_ROUND_UP(OSC_HZ, rate);
-	} else if (priv->v0pll_hz % rate == 0) {
+	} else if ((priv->v0pll_hz % rate) == 0) {
 		sel = DCLK_VOP_SEL_V0PLL;
 		div = DIV_ROUND_UP(priv->v0pll_hz, rate);
-	} else if (priv->v1pll_hz % rate == 0) {
+	} else if ((priv->v1pll_hz % rate) == 0) {
 		sel = DCLK_VOP_SEL_V1PLL;
 		div = DIV_ROUND_UP(priv->v1pll_hz, rate);
 	} else {
