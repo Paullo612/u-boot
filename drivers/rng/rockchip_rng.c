@@ -3,6 +3,7 @@
  * Copyright (c) 2020 Fuzhou Rockchip Electronics Co., Ltd
  */
 
+#include <clk.h>
 #include <dm.h>
 #include <rng.h>
 #include <asm/arch-rockchip/hardware.h>
@@ -103,6 +104,7 @@ struct rk_rng_soc_data {
 
 struct rk_rng_plat {
 	fdt_addr_t base;
+	struct clk_bulk clks;
 	struct rk_rng_soc_data *soc_data;
 };
 
@@ -306,6 +308,8 @@ static int rockchip_rng_read(struct udevice *dev, void *data, size_t len)
 	if (!pdata->soc_data || !pdata->soc_data->rk_rng_read)
 		return -EINVAL;
 
+	clk_enable_bulk(&pdata->clks);
+
 	for (i = 0; i < len / RK_HW_RNG_MAX; i++, buf += RK_HW_RNG_MAX) {
 		ret = pdata->soc_data->rk_rng_read(dev, buf, RK_HW_RNG_MAX);
 		if (ret)
@@ -317,6 +321,7 @@ static int rockchip_rng_read(struct udevice *dev, void *data, size_t len)
 						   len % RK_HW_RNG_MAX);
 
 exit:
+	clk_disable_bulk(&pdata->clks);
 	return ret;
 }
 
@@ -338,10 +343,15 @@ static int rockchip_rng_probe(struct udevice *dev)
 	struct rk_rng_plat *pdata = dev_get_priv(dev);
 	int ret = 0;
 
+	clk_get_bulk(dev, &pdata->clks);
+
 	pdata->soc_data = (struct rk_rng_soc_data *)dev_get_driver_data(dev);
 
-	if (pdata->soc_data->rk_rng_init)
+	if (pdata->soc_data->rk_rng_init) {
+		clk_enable_bulk(&pdata->clks);
 		ret = pdata->soc_data->rk_rng_init(dev);
+		clk_disable_bulk(&pdata->clks);
+	}
 
 	return ret;
 }
