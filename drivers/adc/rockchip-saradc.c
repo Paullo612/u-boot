@@ -347,6 +347,14 @@ static const struct rockchip_saradc_data rk3528_saradc_data = {
 	.start_channel = rockchip_saradc_start_channel_v2,
 };
 
+static const struct rockchip_saradc_data rk3562_saradc_data = {
+	.num_bits = 10,
+	.num_channels = 8,
+	.clk_rate = 1000000,
+	.channel_data = rockchip_saradc_channel_data_v2,
+	.start_channel = rockchip_saradc_start_channel_v2,
+};
+
 static const struct rockchip_saradc_data rk3588_saradc_data = {
 	.num_bits = 12,
 	.num_channels = 8,
@@ -364,6 +372,8 @@ static const struct udevice_id rockchip_saradc_ids[] = {
 	  .data = (ulong)&rk3399_saradc_data },
 	{ .compatible = "rockchip,rk3528-saradc",
 	  .data = (ulong)&rk3528_saradc_data },
+	{ .compatible = "rockchip,rk3562-saradc",
+	  .data = (ulong)&rk3562_saradc_data },
 	{ .compatible = "rockchip,rk3588-saradc",
 	  .data = (ulong)&rk3588_saradc_data },
 	{ }
