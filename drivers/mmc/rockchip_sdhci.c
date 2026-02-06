@@ -687,6 +687,18 @@ static const struct sdhci_data rk3528_data = {
 	.ddr50_strbin_delay_num = 0xa,
 };
 
+static const struct sdhci_data rk3562_data = {
+	.set_ios_post = rk3568_sdhci_set_ios_post,
+	.set_clock = rk3568_sdhci_set_clock,
+	.config_dll = rk3568_sdhci_config_dll,
+	.flags = FLAG_TAPVALUE_FROM_SW,
+	.hs200_txclk_tapnum = 0xc,
+	.hs400_txclk_tapnum = 0x6,
+	.hs400_cmdout_tapnum = 0x6,
+	.hs400_strbin_tapnum = 0x3,
+	.ddr50_strbin_delay_num = 0xa,
+};
+
 static const struct sdhci_data rk3568_data = {
 	.set_ios_post = rk3568_sdhci_set_ios_post,
 	.set_clock = rk3568_sdhci_set_clock,
@@ -729,6 +741,10 @@ static const struct udevice_id sdhci_ids[] = {
 	{
 		.compatible = "rockchip,rk3528-dwcmshc",
 		.data = (ulong)&rk3528_data,
+	},
+	{
+		.compatible = "rockchip,rk3562-dwcmshc",
+		.data = (ulong)&rk3562_data,
 	},
 	{
 		.compatible = "rockchip,rk3568-dwcmshc",
