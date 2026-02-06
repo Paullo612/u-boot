@@ -1,0 +1,108 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+
+#include "rockchip-u-boot.dtsi"
+
+/ {
+	chosen {
+		u-boot,spl-boot-order = "same-as-spl", &sdmmc0, &sdhci;
+	};
+
+	dmc {
+		compatible = "rockchip,rk3562-dmc";
+		bootph-all;
+	};
+
+	soc {
+		rng: rng@ff8e0000 {
+			compatible = "rockchip,rkrng";
+			reg = <0x0 0xff8e0000 0x0 0x200>;
+			clocks = <&cru HCLK_RK_RNG_NS>;
+		};
+	};
+};
+
+&cru {
+	bootph-all;
+};
+
+&emmc_bus8 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&emmc_clk {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&emmc_cmd {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&emmc_strb {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&ioc_grf {
+	bootph-all;
+};
+
+&otp {
+	bootph-some-ram;
+};
+
+&pcfg_pull_none {
+	bootph-all;
+};
+
+&pcfg_pull_up {
+	bootph-all;
+};
+
+&pcfg_pull_up_drv_level_2 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdhci {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0 {
+	bootph-pre-ram;
+	bootph-some-ram;
+	u-boot,spl-fifo-mode;
+};
+
+&sdmmc0_bus4 {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_clk {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_cmd {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&sdmmc0_det {
+	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&uart0 {
+	bootph-all;
+	clock-frequency = <24000000>;
+};
+
+&uart0m0_xfer {
+	bootph-pre-sram;
+	bootph-pre-ram;
+};

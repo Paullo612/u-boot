@@ -1,0 +1,15 @@
+if ROCKCHIP_RK3562
+
+config ROCKCHIP_BOOT_MODE_REG
+	default 0xff010220
+
+config ROCKCHIP_STIMER_BASE
+	default 0xffa90020
+
+config SYS_SOC
+	default "rk3562"
+
+config SYS_CONFIG_NAME
+	default "rk3562_common"
+
+endif
