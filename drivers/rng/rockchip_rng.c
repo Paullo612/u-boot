@@ -200,8 +200,8 @@ static int rk_trngv1_init(struct udevice *dev)
 
 	version = trng_read(pdata, TRNG_V1_VERSION);
 	if (version != TRNG_v1_VERSION_CODE) {
-		printf("wrong trng version, expected = %08x, actual = %08x",
-		       TRNG_V1_VERSION, version);
+		printf("wrong trng version, expected = %08x, actual = %08x\n",
+		       TRNG_v1_VERSION_CODE, version);
 		return -EFAULT;
 	}
 
