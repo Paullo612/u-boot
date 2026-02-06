@@ -117,6 +117,9 @@ List of mainline supported Rockchip boards:
      - Radxa E24C (radxa-e24c-rk3528)
      - Radxa ROCK 2A/2F (rock-2-rk3528)
 
+* rk3562
+     - Generic RK3562 (generic-rk3562)
+
 * rk3566
      - Anbernic RGxx3 (anbernic-rgxx3-rk3566)
      - FriendlyElec NanoPi R3S (nanopi-r3s-rk3566)
@@ -309,6 +312,15 @@ To build rk3528 boards:
         export BL31=../rkbin/bin/rk35/rk3528_bl31_v1.18.elf
         export ROCKCHIP_TPL=../rkbin/bin/rk35/rk3528_ddr_1056MHz_v1.10.bin
         make generic-rk3528_defconfig
+        make CROSS_COMPILE=aarch64-linux-gnu-
+
+To build rk3562 boards:
+
+.. code-block:: bash
+
+        export BL31=../rkbin/bin/rk35/rk3562_bl31_v1.23.elf
+        export ROCKCHIP_TPL=../rkbin/bin/rk35/rk3562_ddr_1332MHz_v1.09.bin
+        make generic-rk3562_defconfig
         make CROSS_COMPILE=aarch64-linux-gnu-
 
 To build rk3568 boards:

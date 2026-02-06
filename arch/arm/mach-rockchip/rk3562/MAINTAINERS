@@ -1,0 +1,5 @@
+GENERIC-RK3562
+M:	Jonas Karlman <jonas@kwiboo.se>
+S:	Maintained
+F:	arch/arm/dts/rk3562-generic*
+F:	configs/generic-rk3562_defconfig
