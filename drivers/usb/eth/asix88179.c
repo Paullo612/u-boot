@@ -581,6 +581,16 @@ static int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 			debug("%s: second try, len=%d\n", __func__, len);
 		}
 
+		/* Message format:
+		 *   <packet data 1> <padding>
+		 *   ...
+		 *   <packet data N> <padding>
+		 *   <packet rx header 1> <dummy header>
+		 *   ...
+		 *   <packet rx header N> <dummy header>
+		 *   <padding> <rx_hdr>
+		 */
+
 		if (len < 4) {
 			usb_ether_advance_rxbuf(ueth, -1);
 			return 0;
@@ -590,7 +600,7 @@ static int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 		pkt_cnt = (u16)rx_hdr;
 		hdr_off = (u16)(rx_hdr >> 16);
 
-		if (pkt_cnt == 0 || hdr_off > len - 4) {
+		if (pkt_cnt == 0 || pkt_cnt * 4 + hdr_off > len) {
 			usb_ether_advance_rxbuf(ueth, -1);
 			return 0;
 		}
@@ -611,6 +621,9 @@ static int ax88179_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 	priv->pkt_data += (pkt_len + 7) & 0xFFF8;
 	priv->pkt_cnt--;
 	priv->pkt_hdr++;
+
+	if (pkt_hdr & (AX_RXHDR_DROP_ERR | AX_RXHDR_CRC_ERR))
+		pkt_len = 0;
 
 	debug("%s: return packet of %u bytes (%u packets left)\n",
 	      __func__, pkt_len, priv->pkt_cnt);
