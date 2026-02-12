@@ -14,9 +14,18 @@ int cdc_bulk_xfer(struct usb_device *udev, u32 pipe, void *data, int length,
 
 int cdc_get_mac_address(struct usb_device *udev, int index, u8 *data);
 
+int cdc_get_net_address(struct usb_device *udev, int index, u8 *data);
+
+int cdc_get_ntb_parameters(struct usb_device *udev, u16 index,
+			   struct usb_cdc_ncm_ntb_parameters *params);
+
 int cdc_set_ethernet_packet_filter(struct usb_device *udev, u16 index, u16 value);
 
 int cdc_set_interface(struct usb_device *udev, u16 index, u16 value);
+
+int cdc_set_net_address(struct usb_device *udev, u16 index, const u8 *data);
+
+int cdc_set_ntb_input_size(struct usb_device *udev, u16 index, u32 value);
 
 int cdc_wait_on_connection(struct usb_device *udev, u32 pipe, int interval);
 

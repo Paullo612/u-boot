@@ -31,6 +31,35 @@ int cdc_bulk_xfer(struct usb_device *udev, u32 pipe, void *data, int length,
 	return ret;
 }
 
+static int cdc_ctrl_get(struct usb_device *udev, u8 request, u8 requesttype,
+			u16 value, u16 index, void *data, u16 size)
+{
+	int ret;
+	ALLOC_CACHE_ALIGN_BUFFER(u8, tmpbuf, size);
+
+	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+			      request, requesttype, value, index, tmpbuf, size,
+			      USB_CTRL_GET_TIMEOUT);
+	if (ret > 0 && ret <= size)
+		memcpy(data, tmpbuf, ret);
+
+	return ret;
+}
+
+static int cdc_ctrl_set(struct usb_device *udev, u8 request, u8 requesttype,
+			u16 value, u16 index, const void *data, u16 size)
+{
+	int ret;
+	ALLOC_CACHE_ALIGN_BUFFER(u8, tmpbuf, size);
+
+	memcpy(tmpbuf, data, size);
+	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
+			      request, requesttype, value, index, tmpbuf, size,
+			      USB_CTRL_SET_TIMEOUT);
+
+	return ret;
+}
+
 int cdc_get_mac_address(struct usb_device *udev, int index, u8 *data)
 {
 	u8 tmpbuf[13];
@@ -43,6 +72,60 @@ int cdc_get_mac_address(struct usb_device *udev, int index, u8 *data)
 
 	memset(data, 0, ETH_ALEN);
 	return -EINVAL;
+}
+
+int cdc_get_net_address(struct usb_device *udev, int index, u8 *data)
+{
+	int ret;
+
+	/* 7.2.2 GetNetAddress [USBNCM11] */
+	ret = cdc_ctrl_get(udev, USB_CDC_GET_NET_ADDRESS,
+			   USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+			   0, index, data, ETH_ALEN);
+	log_debug("GetNetAddress(): ret=%d, status=%lx\n", ret, udev->status);
+	if (ret == ETH_ALEN)
+		return 0;
+
+	memset(data, 0, ETH_ALEN);
+	return -EINVAL;
+}
+
+int cdc_get_ntb_parameters(struct usb_device *udev, u16 index,
+			   struct usb_cdc_ncm_ntb_parameters *params)
+{
+	int ret;
+
+	/* 7.2.1 GetNtbParameters [USBNCM11] */
+	ret = cdc_ctrl_get(udev, USB_CDC_GET_NTB_PARAMETERS,
+			   USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+			   0, index, params, sizeof(*params));
+	log_debug("GetNtbParameters(): ret=%d, status=%lx\n", ret, udev->status);
+	if (ret != sizeof(*params))
+		return ret < 0 ? ret : -EINVAL;
+
+	le16_to_cpus(&params->wLength);
+	le16_to_cpus(&params->bmNtbFormatsSupported);
+	le32_to_cpus(&params->dwNtbInMaxSize);
+	le16_to_cpus(&params->wNdpInDivisor);
+	le16_to_cpus(&params->wNdpInPayloadRemainder);
+	le16_to_cpus(&params->wNdpInAlignment);
+	le32_to_cpus(&params->dwNtbOutMaxSize);
+	le16_to_cpus(&params->wNdpOutDivisor);
+	le16_to_cpus(&params->wNdpOutPayloadRemainder);
+	le16_to_cpus(&params->wNdpOutAlignment);
+	le16_to_cpus(&params->wNtbOutMaxDatagrams);
+
+	if (params->wLength != USB_CDC_NCM_NTB_MAX_LENGTH ||
+	    !(params->bmNtbFormatsSupported & USB_CDC_NCM_NTB16_SUPPORTED) ||
+	    params->wNdpInAlignment < USB_CDC_NCM_NDP_ALIGN_MIN_SIZE ||
+	    params->wNdpOutAlignment < USB_CDC_NCM_NDP_ALIGN_MIN_SIZE) {
+		log_warning("Invalid NTB parameters: [%u,%x,%u,%u]\n",
+			    params->wLength, params->bmNtbFormatsSupported,
+			    params->wNdpInAlignment, params->wNdpOutAlignment);
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 int cdc_set_ethernet_packet_filter(struct usb_device *udev, u16 index, u16 value)
@@ -72,6 +155,35 @@ int cdc_set_interface(struct usb_device *udev, u16 index, u16 value)
 		  index, value, ret, udev->status);
 
 	return ret;
+}
+
+int cdc_set_net_address(struct usb_device *udev, u16 index, const u8 *data)
+{
+	int ret;
+
+	/* 7.2.3 SetNetAddress [USBNCM11] */
+	ret = cdc_ctrl_set(udev, USB_CDC_SET_NET_ADDRESS,
+			   USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+			   0, index, data, ETH_ALEN);
+	log_debug("SetNetAddress(%pM): ret=%d, status=%lx\n",
+		  data, ret, udev->status);
+
+	return ret == ETH_ALEN ? 0 : ret;
+}
+
+int cdc_set_ntb_input_size(struct usb_device *udev, u16 index, u32 value)
+{
+	u32 dwNtbInMaxSize = cpu_to_le32(value);
+	int ret;
+
+	/* 7.2.6 SetNtbInputSize [USBNCM11] */
+	ret = cdc_ctrl_set(udev, USB_CDC_SET_NTB_INPUT_SIZE,
+			   USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE,
+			   0, index, &dwNtbInMaxSize, sizeof(dwNtbInMaxSize));
+	log_debug("SetNtbInputSize(%u): ret=%d, status=%lx\n",
+		  value, ret, udev->status);
+
+	return ret == sizeof(dwNtbInMaxSize) ? 0 : ret;
 }
 
 int cdc_wait_on_connection(struct usb_device *udev, u32 pipe, int interval)
