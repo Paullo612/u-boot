@@ -1149,9 +1149,36 @@ static int usb_device_is_ignored(u16 id_vendor, u16 id_product)
 	return 0;
 }
 
-int usb_select_config(struct usb_device *dev)
+int usb_select_configuration_no(struct usb_device *dev, int cfgno)
 {
 	unsigned char *tmpbuf = NULL;
+	int err;
+
+	err = usb_get_configuration_len(dev, cfgno);
+	if (err >= 0) {
+		tmpbuf = (unsigned char *)malloc_cache_aligned(err);
+		if (!tmpbuf)
+			err = -ENOMEM;
+		else
+			err = usb_get_configuration_no(dev, cfgno, tmpbuf, err);
+	}
+	if (err < 0) {
+		free(tmpbuf);
+		return err;
+	}
+
+	err = usb_parse_config(dev, tmpbuf, cfgno);
+	free(tmpbuf);
+	if (err < 0)
+		return err;
+
+	usb_set_maxpacket(dev);
+
+	return usb_set_configuration(dev, dev->config.desc.bConfigurationValue);
+}
+
+int usb_select_config(struct usb_device *dev)
+{
 	int err;
 
 	err = get_descriptor_len(dev, USB_DT_DEVICE_SIZE, USB_DT_DEVICE_SIZE);
@@ -1193,34 +1220,18 @@ int usb_select_config(struct usb_device *dev)
 	 */
 	mdelay(1);
 
-	/* only support for one config for now */
-	err = usb_get_configuration_len(dev, 0);
-	if (err >= 0) {
-		tmpbuf = (unsigned char *)malloc_cache_aligned(err);
-		if (!tmpbuf)
-			err = -ENOMEM;
-		else
-			err = usb_get_configuration_no(dev, 0, tmpbuf, err);
-	}
-	if (err < 0) {
-		printf("usb_new_device: Cannot read configuration, " \
-		       "skipping device %04x:%04x\n",
-		       dev->descriptor.idVendor, dev->descriptor.idProduct);
-		free(tmpbuf);
-		return err;
-	}
-	usb_parse_config(dev, tmpbuf, 0);
-	free(tmpbuf);
-	usb_set_maxpacket(dev);
 	/*
-	 * we set the default configuration here
+	 * we select the default configuration here
 	 * This seems premature. If the driver wants a different configuration
 	 * it will need to select itself.
 	 */
-	err = usb_set_configuration(dev, dev->config.desc.bConfigurationValue);
+	err = usb_select_configuration_no(dev, 0);
 	if (err < 0) {
-		printf("failed to set default configuration " \
-			"len %d, status %lX\n", dev->act_len, dev->status);
+		printf("failed to select default configuration " \
+			"len %d, status %lX, " \
+			"skipping device %04x:%04x\n",
+			dev->act_len, dev->status,
+			dev->descriptor.idVendor, dev->descriptor.idProduct);
 		return err;
 	}
 

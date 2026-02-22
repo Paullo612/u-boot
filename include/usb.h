@@ -901,6 +901,16 @@ int usb_scan_device(struct udevice *parent, int port,
 struct udevice *usb_get_bus(struct udevice *dev);
 
 /**
+ * usb_select_configuration_no() - Select configuration to use for a device
+ *
+ * This re-reads the configuration descriptor and sets the configuration.
+ *
+ * @dev:	Device to select configuration
+ * @cfgno:	Configuration number to set
+ */
+int usb_select_configuration_no(struct usb_device *dev, int cfgno);
+
+/**
  * usb_select_config() - Set up a device ready for use
  *
  * This function assumes that the device already has an address and a driver
