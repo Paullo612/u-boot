@@ -691,7 +691,12 @@ U_BOOT_DRIVER(ax88179_eth) = {
 };
 
 static const struct usb_device_id ax88179_eth_id_table[] = {
+#if IS_ENABLED(CONFIG_USB_ETHER_CDC_ECM) || IS_ENABLED(CONFIG_USB_ETHER_CDC_NCM)
+	{ USB_DEVICE_VER(0x0b95, 0x1790, 0, 0x0100),
+		.driver_info = FLAG_TYPE_AX88179 },
+#else
 	{ USB_DEVICE(0x0b95, 0x1790), .driver_info = FLAG_TYPE_AX88179 },
+#endif
 	{ USB_DEVICE(0x0b95, 0x178a), .driver_info = FLAG_TYPE_AX88178a },
 	{ USB_DEVICE(0x2001, 0x4a00), .driver_info = FLAG_TYPE_DLINK_DUB1312 },
 	{ USB_DEVICE(0x0df6, 0x0072), .driver_info = FLAG_TYPE_SITECOM },
