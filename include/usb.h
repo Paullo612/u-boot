@@ -513,6 +513,10 @@ struct usb_driver_entry {
 		(USB_DEVICE_ID_MATCH_DEV_LO | USB_DEVICE_ID_MATCH_DEV_HI)
 #define USB_DEVICE_ID_MATCH_DEVICE_AND_VERSION \
 		(USB_DEVICE_ID_MATCH_DEVICE | USB_DEVICE_ID_MATCH_DEV_RANGE)
+#define USB_DEVICE_ID_MATCH_INT_INFO \
+		(USB_DEVICE_ID_MATCH_INT_CLASS | \
+		USB_DEVICE_ID_MATCH_INT_SUBCLASS | \
+		USB_DEVICE_ID_MATCH_INT_PROTOCOL)
 
 /**
  * USB_DEVICE - macro used to describe a specific usb device
@@ -542,6 +546,20 @@ struct usb_driver_entry {
 	.idProduct = (prod), \
 	.bcdDevice_lo = (lo), \
 	.bcdDevice_hi = (hi)
+/**
+ * USB_INTERFACE_INFO - macro used to describe a class of usb interfaces
+ * @cl: bInterfaceClass value
+ * @sc: bInterfaceSubClass value
+ * @pr: bInterfaceProtocol value
+ *
+ * This macro is used to create a struct usb_device_id that matches a
+ * specific class of interfaces.
+ */
+#define USB_INTERFACE_INFO(cl, sc, pr) \
+	.match_flags = USB_DEVICE_ID_MATCH_INT_INFO, \
+	.bInterfaceClass = (cl), \
+	.bInterfaceSubClass = (sc), \
+	.bInterfaceProtocol = (pr)
 
 #define U_BOOT_USB_DEVICE(__name, __match) \
 	ll_entry_declare(struct usb_driver_entry, __name, usb_driver_entry) = {\
