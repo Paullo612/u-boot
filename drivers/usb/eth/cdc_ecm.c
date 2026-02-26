@@ -278,6 +278,11 @@ U_BOOT_DRIVER(usb_cdc_2_ecm) = {
 static const struct usb_device_id cdc_ecm_id_table[] = {
 	/* ASIX AX88179A, AX88772D, AX88279 */
 	{ USB_DEVICE_VER(0x0b95, 0x1790, 0x0200, 0x0400), },
+	/* Realtek RTL8152, RTL8153, RTL8156, RTL8157 */
+	{ USB_DEVICE(0x0bda, 0x8152), },
+	{ USB_DEVICE(0x0bda, 0x8153), },
+	{ USB_DEVICE(0x0bda, 0x8156), },
+	{ USB_DEVICE(0x0bda, 0x8157), },
 	/* CDC ECM */
 	{ USB_INTERFACE_INFO(USB_CLASS_COMM, USB_CDC_SUBCLASS_ETHERNET,
 			     USB_CDC_PROTO_NONE), },
