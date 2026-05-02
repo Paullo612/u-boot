@@ -7,6 +7,7 @@
 #include <bitfield.h>
 #include <clk-uclass.h>
 #include <dm.h>
+#include <dt-structs.h>
 #include <errno.h>
 #include <syscon.h>
 #include <asm/arch-rockchip/cru_rk3568.h>
