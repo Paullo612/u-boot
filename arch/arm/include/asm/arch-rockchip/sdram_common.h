@@ -45,6 +45,12 @@
 #define PLL_SSMOD_SPREAD(n)		(((n) >> 1) & 0xff)
 #define PLL_SSMOD_DIV(n)		(((n) >> 9) & 0xff)
 #define PLL_SSMOD_DOWNSPREAD(n)		(((n) >> 17) & 0x3)
+#define DIS_TRAIN_PRINT(n)		(((n) >> 19) & 0x1)
+#define DDR_DERATE_EN(n)		(((n) >> 26) & 0x1)
+#define DDR_PER_BANK_REF_EN(n)		(((n) >> 27) & 0x1)
+#define DDR_EXT_TEMP_REF(n)		(((n) >> 29) & 0x3)
+
+#define DDR_PAGECLOSE_EN(n)		(((n) >> 3) & 0x1)
 
 /* sdram_head_info_v2 define */
 /* for *_drv_odten and *_drv_odtoff */
@@ -69,10 +75,13 @@
 
 /* for *odt_en_freq; */
 #define DRAM_ODT_EN_FREQ_SHIFT		0
+#define DRAM_ODT_EN_FREQ_MASK		0xfff
 #define PHY_ODT_EN_FREQ_SHIFT		12
+#define PHY_ODT_EN_FREQ_MASK		0xfff
 #define DRAMODT_EN_FREQ(n)		(((n) >> DRAM_ODT_EN_FREQ_SHIFT) & \
-					 0xfff)
-#define PHYODT_EN_FREQ(n)		(((n) >> PHY_ODT_EN_FREQ_SHIFT) & 0xfff)
+					 DRAM_ODT_EN_FREQ_MASK)
+#define PHYODT_EN_FREQ(n)		(((n) >> PHY_ODT_EN_FREQ_SHIFT) & \
+					 PHY_ODT_EN_FREQ_MASK)
 
 #define PHY_DQ_SR_SHIFT			0
 #define PHY_CA_SR_SHIFT			8
