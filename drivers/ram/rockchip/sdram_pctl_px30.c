@@ -149,7 +149,7 @@ u32 pctl_remodify_sdram_params(struct ddr_pctl_regs *pctl_regs,
 		}
 	}
 
-	tmp &= ~((3ul << 30) | (3ul << 24) | (3ul << 12));
+	tmp &= ~((3ul << 30) | (0xful << 24) | (3ul << 12));
 
 	switch (cap_info->dbw) {
 	case 2:
