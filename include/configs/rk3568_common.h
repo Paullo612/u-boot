@@ -15,6 +15,14 @@
 #define CFG_SYS_SDRAM_BASE		0
 #define SDRAM_MAX_SIZE			0xf0000000
 
+#if !defined(CFG_SYS_NS16550_CLK)
+#define CFG_SYS_NS16550_CLK             24000000
+#endif
+
+#if !defined(CFG_SYS_NS16550_COM1)
+#define CFG_SYS_NS16550_COM1		0xfe660000
+#endif
+
 #ifndef ROCKCHIP_DEVICE_SETTINGS
 #define ROCKCHIP_DEVICE_SETTINGS
 #endif

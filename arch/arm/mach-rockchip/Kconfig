@@ -464,12 +464,16 @@ config ROCKCHIP_RK3562
 config ROCKCHIP_RK3568
 	bool "Support Rockchip RK3568"
 	select ARM64
+	select SUPPORT_TPL
+	select TPL_HAVE_INIT_STACK if TPL
+	select TPL_ROCKCHIP_BACK_TO_BROM if TPL
 	select SUPPORT_SPL
 	select SUPPORT_TPL
 	select SPL
 	select CLK
 	select PINCTRL
 	select RAM
+	select ROCKCHIP_SDRAM_COMMON
 	select REGMAP
 	select SYSCON
 	select BOARD_LATE_INIT
@@ -485,12 +489,14 @@ config ROCKCHIP_RK3568
 	imply RNG_ROCKCHIP
 	imply ROCKCHIP_COMMON_BOARD
 	imply ROCKCHIP_COMMON_STACK_ADDR
-	imply ROCKCHIP_EXTERNAL_TPL
 	imply ROCKCHIP_OTP
 	imply SPL_ATF_NO_PLATFORM_PARAM if SPL_ATF
 	imply SPL_MMC_HS200_SUPPORT if SPL_MMC && MMC_HS200_SUPPORT
+	imply TPL
 	imply TPL_RAM if TPL
 	imply TPL_ROCKCHIP_COMMON_BOARD if TPL
+	imply TPL_SERIAL if TPL
+	imply TPL_SYS_NS16550_SERIAL if TPL
 	help
 	  The Rockchip RK3568 is a ARM-based SoC with quad-core Cortex-A55,
 	  including NEON and GPU, 512K L3 cache, Mali-G52 based graphics,

@@ -61,6 +61,10 @@ config TARGET_ORANGEPI_3B_RK3566
 
 endchoice
 
+config SOC_SPECIFIC_OPTIONS # dummy
+	def_bool y
+	select HAS_CUSTOM_SYS_INIT_SP_ADDR
+
 config ROCKCHIP_BOOT_MODE_REG
 	default 0xfdc20200
 
@@ -69,6 +73,18 @@ config ROCKCHIP_STIMER_BASE
 
 config SYS_SOC
 	default "rk3568"
+
+config TPL_LDSCRIPT
+	default "arch/arm/mach-rockchip/u-boot-tpl-v8.lds"
+
+config TPL_STACK
+	default 0xfdcd8000
+
+config TPL_SYS_MALLOC_F_LEN
+	default 0x2000
+
+config TPL_TEXT_BASE
+	default 0xfdcc1000
 
 source "board/rockchip/evb_rk3568/Kconfig"
 source "board/anbernic/rgxx3_rk3566/Kconfig"
