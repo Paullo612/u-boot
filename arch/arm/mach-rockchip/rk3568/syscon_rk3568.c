@@ -21,3 +21,20 @@ U_BOOT_DRIVER(syscon_rk3568) = {
 	.bind = dm_scan_fdt_dev,
 #endif
 };
+
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+static int rk3568_syscon_bind_of_plat(struct udevice *dev)
+{
+	dev->driver_data = dev->driver->of_match->data;
+	debug("syscon: %s %d\n", dev->name, (uint)dev->driver_data);
+
+	return 0;
+}
+
+U_BOOT_DRIVER(rockchip_rk3568_pmugrf) = {
+	.name = "rockchip_rk3568_pmugrf",
+	.id = UCLASS_SYSCON,
+	.of_match = rk3568_syscon_ids + 1,
+	.bind = rk3568_syscon_bind_of_plat,
+};
+#endif
