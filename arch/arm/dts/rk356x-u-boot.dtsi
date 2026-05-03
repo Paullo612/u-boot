@@ -16,8 +16,33 @@
 		u-boot,spl-boot-order = "same-as-spl", &sdmmc0, &sdhci;
 	};
 
+	ddrgrf: syscon@fdc40000 {
+		compatible = "rockchip,rk3568-ddrgrf", "syscon";
+		reg = <0x0 0xfdc40000 0x0 0x10000>;
+
+		bootph-all;
+	};
+
+	sgrf: syscon@fdd18000 {
+		compatible = "rockchip,rk3568-sgrf", "syscon";
+		reg = <0x0 0xfdd18000 0x0 0x4000>;
+
+		bootph-all;
+	};
+
+	msch: syscon@fe100000 {
+		compatible = "rockchip,rk3568-msch", "syscon";
+		reg = <0x0 0xfe100000 0x0 0x2000>;
+
+		bootph-all;
+	};
+
 	dmc: dmc@fe250000 {
 		compatible = "rockchip,rk3568-dmc";
+		rockchip,ddrgrf = <&ddrgrf>;
+		rockchip,cru = <&cru>;
+		rockchip,msch = <&msch>;
+		rockchip,pmugrf = <&pmugrf>;
 		reg = <0 0xfe250000 0 0x10000
 		       0 0xfe800000 0 0x10000>;
 
