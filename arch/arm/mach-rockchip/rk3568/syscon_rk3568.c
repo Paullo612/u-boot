@@ -8,8 +8,11 @@
 #include <asm/arch-rockchip/clock.h>
 
 static const struct udevice_id rk3568_syscon_ids[] = {
-	{ .compatible = "rockchip,rk3568-grf", .data = ROCKCHIP_SYSCON_GRF },
+	{ .compatible = "rockchip,rk3568-grf",    .data = ROCKCHIP_SYSCON_GRF    },
 	{ .compatible = "rockchip,rk3568-pmugrf", .data = ROCKCHIP_SYSCON_PMUGRF },
+	{ .compatible = "rockchip,rk3568-msch",   .data = ROCKCHIP_SYSCON_MSCH   },
+	{ .compatible = "rockchip,rk3568-sgrf",   .data = ROCKCHIP_SYSCON_SGRF   },
+	{ .compatible = "rockchip,rk3568-ddrgrf", .data = ROCKCHIP_SYSCON_DDRGRF },
 	{ }
 };
 
@@ -35,6 +38,27 @@ U_BOOT_DRIVER(rockchip_rk3568_pmugrf) = {
 	.name = "rockchip_rk3568_pmugrf",
 	.id = UCLASS_SYSCON,
 	.of_match = rk3568_syscon_ids + 1,
+	.bind = rk3568_syscon_bind_of_plat,
+};
+
+U_BOOT_DRIVER(rockchip_rk3568_msch) = {
+	.name = "rockchip_rk3568_msch",
+	.id = UCLASS_SYSCON,
+	.of_match = rk3568_syscon_ids + 2,
+	.bind = rk3568_syscon_bind_of_plat,
+};
+
+U_BOOT_DRIVER(rockchip_rk3568_sgrf) = {
+	.name = "rockchip_rk3568_sgrf",
+	.id = UCLASS_SYSCON,
+	.of_match = rk3568_syscon_ids + 3,
+	.bind = rk3568_syscon_bind_of_plat,
+};
+
+U_BOOT_DRIVER(rockchip_rk3568_ddrgrf) = {
+	.name = "rockchip_rk3568_ddrgrf",
+	.id = UCLASS_SYSCON,
+	.of_match = rk3568_syscon_ids + 4,
 	.bind = rk3568_syscon_bind_of_plat,
 };
 #endif
