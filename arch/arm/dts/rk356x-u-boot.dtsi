@@ -16,8 +16,11 @@
 		u-boot,spl-boot-order = "same-as-spl", &sdmmc0, &sdhci;
 	};
 
-	dmc: dmc {
+	dmc: dmc@fe250000 {
 		compatible = "rockchip,rk3568-dmc";
+		reg = <0 0xfe250000 0 0x10000
+		       0 0xfe800000 0 0x10000>;
+
 		bootph-all;
 	};
 
