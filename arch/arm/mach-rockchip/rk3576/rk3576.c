@@ -9,6 +9,7 @@
 #include <misc.h>
 #include <asm/armv8/mmu.h>
 #include <asm/arch-rockchip/bootrom.h>
+#include <asm/arch-rockchip/cru_rk3576.h>
 #include <asm/arch-rockchip/hardware.h>
 
 #define SYS_GRF_BASE		0x2600A000
@@ -189,6 +190,9 @@ int arch_cpu_init(void)
 	 * Module: GMAC0/1, MMU0/1(PCIe, SATA, USB3)
 	 */
 	writel(0xffffff00, SYS_SGRF_BASE + SYS_SGRF_SOC_CON20);
+
+	/* Assert SRST_A_USB3OTG0 to fix reset issue */
+	writel(0x00200020, RK3576_CRU_BASE + RK3576_SOFTRST_CON(47));
 
 	/* Disable USB3OTG0 U3 port, later enabled by USBDP PHY driver */
 	writel(0xffff0188, USB_GRF_BASE + USB3OTG0_CON1);
