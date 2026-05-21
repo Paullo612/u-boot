@@ -21,6 +21,7 @@
 #define GPIO0_IOC_BASE		0x26040000
 #define GPIO0B_PULL_L		0x0024
 #define GPIO0B_IE_L		0x002C
+#define IOCGRF_MISC_CON		0x40F0
 
 #define SYS_SGRF_BASE		0x26004000
 #define SYS_SGRF_SOC_CON14	0x0058
@@ -190,6 +191,11 @@ int arch_cpu_init(void)
 	 * Module: GMAC0/1, MMU0/1(PCIe, SATA, USB3)
 	 */
 	writel(0xffffff00, SYS_SGRF_BASE + SYS_SGRF_SOC_CON20);
+
+#ifdef CONFIG_ROCKCHIP_DISABLE_FORCE_JTAG
+	/* Disable JTAG exposed on SDMMC */
+	writel(0x00020000, GPIO0_IOC_BASE + IOCGRF_MISC_CON);
+#endif
 
 	/* Assert SRST_A_USB3OTG0 to fix reset issue */
 	writel(0x00200020, RK3576_CRU_BASE + RK3576_SOFTRST_CON(47));
