@@ -17,6 +17,10 @@
 #include <asm/arch-rockchip/sdram_rv1126.h>
 #include <linux/delay.h>
 
+#define PMU_GRF_BASE_ADDR		0xfe020000
+
+#if IS_ENABLED(CONFIG_TPL_BUILD)
+
 /* define training flag */
 #define CA_TRAINING			(0x1 << 0)
 #define READ_GATE_TRAINING		(0x1 << 1)
@@ -33,8 +37,6 @@
 #define DESKEW_MDF_DIFF_VAL		(1)
 
 struct dram_info {
-#if defined(CONFIG_TPL_BUILD) || \
-	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
 	void __iomem *pctl;
 	void __iomem *phy;
 	struct rv1126_cru *cru;
@@ -43,16 +45,10 @@ struct dram_info {
 	struct rv1126_grf *grf;
 	u32 sr_idle;
 	u32 pd_idle;
-#endif
-	struct ram_info info;
 	struct rv1126_pmugrf *pmugrf;
 };
 
-#if defined(CONFIG_TPL_BUILD) || \
-	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
-
 #define GRF_BASE_ADDR			0xfe000000
-#define PMU_GRF_BASE_ADDR		0xfe020000
 #define DDR_GRF_BASE_ADDR		0xfe030000
 #define BUS_SGRF_BASE_ADDR		0xfe0a0000
 #define SERVER_MSCH_BASE_ADDR		0xfe800000
@@ -3418,7 +3414,7 @@ int get_uart_config(void)
 }
 
 /* return: 0 = success, other = fail */
-static int rv1126_dmc_init(struct udevice *dev)
+static int rv1126_dmc_probe(struct udevice *dev)
 {
 	struct rv1126_sdram_params *sdram_params;
 	int ret = 0;
@@ -3502,31 +3498,18 @@ error:
 	return (-1);
 }
 
-#endif
-
-static int rv1126_dmc_probe(struct udevice *dev)
-{
-#if defined(CONFIG_TPL_BUILD) || \
-	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
-	if (rv1126_dmc_init(dev))
-		return 0;
-#else
-	struct dram_info *priv = dev_get_priv(dev);
-
-	priv->pmugrf = syscon_get_first_range(ROCKCHIP_SYSCON_PMUGRF);
-	debug("%s: grf=%p\n", __func__, priv->pmugrf);
-	priv->info.base = CFG_SYS_SDRAM_BASE;
-	priv->info.size =
-		rockchip_sdram_size((phys_addr_t)&priv->pmugrf->os_reg[2]);
-#endif
-	return 0;
-}
+#endif /* IS_ENABLED(CONFIG_TPL_BUILD) */
 
 static int rv1126_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct rv1126_pmugrf * const pmugrf = (void *)PMU_GRF_BASE_ADDR;
 
-	*info = priv->info;
+	/* SDRAM size is not used in TPL, skip to save code size */
+	if (IS_ENABLED(CONFIG_TPL_BUILD))
+		return 0;
+
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&pmugrf->os_reg[2]);
 
 	return 0;
 }
@@ -3540,11 +3523,13 @@ static const struct udevice_id rv1126_dmc_ids[] = {
 	{ }
 };
 
-U_BOOT_DRIVER(dmc_rv1126) = {
+U_BOOT_DRIVER(rockchip_rv1126_dmc) = {
 	.name = "rockchip_rv1126_dmc",
 	.id = UCLASS_RAM,
 	.of_match = rv1126_dmc_ids,
 	.ops = &rv1126_dmc_ops,
+#if IS_ENABLED(CONFIG_TPL_BUILD)
 	.probe = rv1126_dmc_probe,
 	.priv_auto = sizeof(struct dram_info),
+#endif
 };
