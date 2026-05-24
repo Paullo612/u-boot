@@ -46,6 +46,7 @@ struct pll_rate_table {
 #define RK3506_MODE_CON			0x0280
 #define RK3506_CLKSEL_CON(x)		(RK3506_CRU_BASE + 0x0300 + (x) * 0x4)
 #define RK3506_SOFTRST_CON0		0x0a00
+#define RK3506_GLB_RST_ST		0x0c04
 #define RK3506_GLB_SRST_FST		0x0c08
 #define RK3506_GLB_SRST_SND		0x0c0c
 #define RK3506_PLL_CON(x)		(0x10000 + (x) * 0x4)
