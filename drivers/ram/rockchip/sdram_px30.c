@@ -18,20 +18,19 @@
 #include <asm/arch-rockchip/sdram_px30.h>
 #include <linux/delay.h>
 
+#define PMUGRF_BASE_ADDR		0xFF010000
+
+#if IS_ENABLED(CONFIG_TPL_BUILD)
+
 struct dram_info {
-#ifdef CONFIG_TPL_BUILD
 	struct ddr_pctl_regs *pctl;
 	struct ddr_phy_regs *phy;
 	struct px30_cru *cru;
 	struct msch_regs *msch;
 	struct px30_ddr_grf_regs *ddr_grf;
 	struct px30_grf *grf;
-#endif
-	struct ram_info info;
 	struct px30_pmugrf *pmugrf;
 };
-
-#ifdef CONFIG_TPL_BUILD
 
 u8 ddr_cfg_2_rbc[] = {
 	/*
@@ -113,7 +112,6 @@ u32 addrmap[][8] = {
 		0x06060606, 0x00000606, 0x3f3f}, /* 13 */
 };
 
-#define PMUGRF_BASE_ADDR		0xFF010000
 #define CRU_BASE_ADDR			0xFF2B0000
 #define GRF_BASE_ADDR			0xFF140000
 #define DDRC_BASE_ADDR			0xFF600000
@@ -719,24 +717,12 @@ error:
 }
 #else
 
-static int px30_dmc_probe(struct udevice *dev)
-{
-	struct dram_info *priv = dev_get_priv(dev);
-
-	priv->pmugrf = syscon_get_first_range(ROCKCHIP_SYSCON_PMUGRF);
-	debug("%s: grf=%p\n", __func__, priv->pmugrf);
-	priv->info.base = CFG_SYS_SDRAM_BASE;
-	priv->info.size =
-		rockchip_sdram_size((phys_addr_t)&priv->pmugrf->os_reg[2]);
-
-	return 0;
-}
-
 static int px30_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct px30_pmugrf * const pmugrf = (void *)PMUGRF_BASE_ADDR;
 
-	*info = priv->info;
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&pmugrf->os_reg[2]);
 
 	return 0;
 }
@@ -750,12 +736,10 @@ static const struct udevice_id px30_dmc_ids[] = {
 	{ }
 };
 
-U_BOOT_DRIVER(dmc_px30) = {
+U_BOOT_DRIVER(rockchip_px30_dmc) = {
 	.name = "rockchip_px30_dmc",
 	.id = UCLASS_RAM,
 	.of_match = px30_dmc_ids,
 	.ops = &px30_dmc_ops,
-	.probe = px30_dmc_probe,
-	.priv_auto	= sizeof(struct dram_info),
 };
-#endif /* CONFIG_TPL_BUILD */
+#endif /* IS_ENABLED(CONFIG_TPL_BUILD) */
