@@ -59,6 +59,16 @@ check_member(rk3328_cru, sdmmc_ext_con[1], 0x39c);
 
 #define PWM_CLOCK_HZ    (74 * MHz)
 
+#define RK3328_CRU_BASE			0xff440000
+#define RK3328_PLL_CON(x)		((x) * 0x4)
+#define RK3328_MODE_CON			0x0080
+#define RK3328_GLB_RST_ST		0x0094
+#define RK3328_GLB_SRST_SND		0x0098
+#define RK3328_GLB_SRST_FST		0x009c
+#define RK3328_CLKSEL_CON(x)		(RK3328_CRU_BASE + 0x0100 + (x) * 0x4)
+#define RK3328_CLKGATE_CON(x)		(RK3328_CRU_BASE + 0x0200 + (x) * 0x4)
+#define RK3328_SOFTRST_CON(x)		(RK3328_CRU_BASE + 0x0300 + (x) * 0x4)
+
 enum apll_frequencies {
 	APLL_816_MHZ,
 	APLL_600_MHZ,
