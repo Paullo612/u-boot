@@ -70,6 +70,8 @@ struct pll_div {
 	u32 frac;
 };
 
+#define RK3128_CRU_BASE			0x20000000
+
 enum {
 	/* PLLCON0*/
 	PLL_POSTDIV1_SHIFT	= 12,
