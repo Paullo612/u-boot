@@ -95,6 +95,9 @@ check_member(rockchip_cru, sdio1_con[1], 0x594);
 
 #define PWM_CLOCK_HZ    PMU_PCLK_HZ
 
+#define RK3399_PMU_CRU_BASE		0xff750000
+#define RK3399_CRU_BASE			0xff760000
+
 enum apll_l_frequencies {
 	APLL_L_1600_MHZ,
 	APLL_L_600_MHZ,
