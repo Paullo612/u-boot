@@ -16,4 +16,7 @@ U_BOOT_DRIVER(syscon_rv1108) = {
 	.name = "rv1108_syscon",
 	.id = UCLASS_SYSCON,
 	.of_match = rv1108_syscon_ids,
+#if CONFIG_IS_ENABLED(OF_REAL)
+	.bind = dm_scan_fdt_dev,
+#endif
 };

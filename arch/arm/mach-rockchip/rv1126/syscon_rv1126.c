@@ -19,6 +19,9 @@ U_BOOT_DRIVER(syscon_rv1126) = {
 	.name = "rv1126_syscon",
 	.id = UCLASS_SYSCON,
 	.of_match = rv1126_syscon_ids,
+#if CONFIG_IS_ENABLED(OF_REAL)
+	.bind = dm_scan_fdt_dev,
+#endif
 };
 
 #if CONFIG_IS_ENABLED(OF_PLATDATA)

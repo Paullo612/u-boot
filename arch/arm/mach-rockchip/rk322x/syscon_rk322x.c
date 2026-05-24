@@ -17,4 +17,7 @@ U_BOOT_DRIVER(syscon_rk322x) = {
 	.name = "rk322x_syscon",
 	.id = UCLASS_SYSCON,
 	.of_match = rk322x_syscon_ids,
+#if CONFIG_IS_ENABLED(OF_REAL)
+	.bind = dm_scan_fdt_dev,
+#endif
 };
