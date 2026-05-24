@@ -28,6 +28,8 @@
 #include <linux/delay.h>
 #include <linux/err.h>
 
+#define PMU_BASE			0x20004000
+
 struct rk3066_dmc_chan_info {
 	struct rk3288_ddr_pctl *pctl;
 	struct rk3288_ddr_publ *publ;
@@ -36,7 +38,6 @@ struct rk3066_dmc_chan_info {
 
 struct rk3066_dmc_dram_info {
 	struct rk3066_dmc_chan_info chan[1];
-	struct ram_info info;
 	struct clk ddr_clk;
 	struct rk3066_cru *cru;
 	struct rk3066_grf *grf;
@@ -814,57 +815,58 @@ static int rk3066_dmc_conv_of_plat(struct udevice *dev)
 static int rk3066_dmc_probe(struct udevice *dev)
 {
 	struct rk3066_dmc_dram_info *priv = dev_get_priv(dev);
+	struct rk3066_dmc_sdram_params *plat = dev_get_plat(dev);
+	struct regmap *map;
+	struct udevice *dev_clk;
+	int ret;
 
+	if (!IS_ENABLED(CONFIG_TPL_BUILD))
+		return 0;
+
+	ret = rk3066_dmc_conv_of_plat(dev);
+	if (ret)
+		return ret;
+
+	map = syscon_get_regmap_by_driver_data(ROCKCHIP_SYSCON_NOC);
+	if (IS_ERR(map))
+		return PTR_ERR(map);
+	priv->chan[0].msch = regmap_get_range(map, 0);
+	priv->grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
 	priv->pmu = syscon_get_first_range(ROCKCHIP_SYSCON_PMU);
 
-	if (IS_ENABLED(CONFIG_TPL_BUILD)) {
-		struct rk3066_dmc_sdram_params *plat = dev_get_plat(dev);
-		struct regmap *map;
-		struct udevice *dev_clk;
-		int ret;
+	priv->chan[0].pctl = regmap_get_range(plat->map, 0);
+	priv->chan[0].publ = regmap_get_range(plat->map, 1);
 
-		ret = rk3066_dmc_conv_of_plat(dev);
-		if (ret)
-			return ret;
+	ret = rockchip_get_clk(&dev_clk);
+	if (ret)
+		return ret;
 
-		map = syscon_get_regmap_by_driver_data(ROCKCHIP_SYSCON_NOC);
-		if (IS_ERR(map))
-			return PTR_ERR(map);
-		priv->chan[0].msch = regmap_get_range(map, 0);
-		priv->grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
+	priv->ddr_clk.id = CLK_DDR;
+	ret = clk_request(dev_clk, &priv->ddr_clk);
+	if (ret)
+		return ret;
 
-		priv->chan[0].pctl = regmap_get_range(plat->map, 0);
-		priv->chan[0].publ = regmap_get_range(plat->map, 1);
+	priv->cru = rockchip_get_cru();
+	if (IS_ERR(priv->cru))
+		return PTR_ERR(priv->cru);
 
-		ret = rockchip_get_clk(&dev_clk);
-		if (ret)
-			return ret;
-
-		priv->ddr_clk.id = CLK_DDR;
-		ret = clk_request(dev_clk, &priv->ddr_clk);
-		if (ret)
-			return ret;
-
-		priv->cru = rockchip_get_cru();
-		if (IS_ERR(priv->cru))
-			return PTR_ERR(priv->cru);
-
-		ret = rk3066_dmc_setup_sdram(dev);
-		if (ret)
-			return ret;
-	} else {
-		priv->info.base = CFG_SYS_SDRAM_BASE;
-		priv->info.size = rockchip_sdram_size((phys_addr_t)&priv->pmu->sys_reg[2]);
-	}
+	ret = rk3066_dmc_setup_sdram(dev);
+	if (ret)
+		return ret;
 
 	return 0;
 }
 
 static int rk3066_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct rk3066_dmc_dram_info *priv = dev_get_priv(dev);
+	static struct rk3188_pmu * const pmu = (void *)PMU_BASE;
 
-	*info = priv->info;
+	/* SDRAM size is not used during DRAM init, skip to save code size */
+	if (IS_ENABLED(CONFIG_TPL_BUILD))
+		return 0;
+
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&pmu->sys_reg[2]);
 
 	return 0;
 }
@@ -881,11 +883,11 @@ static const struct udevice_id rk3066_dmc_ids[] = {
 U_BOOT_DRIVER(rockchip_rk3066_dmc) = {
 	.name		= "rockchip_rk3066_dmc",
 	.id		= UCLASS_RAM,
+	.of_match	= rk3066_dmc_ids,
 	.ops		= &rk3066_dmc_ops,
 	.probe		= rk3066_dmc_probe,
-	.of_match	= rk3066_dmc_ids,
-	.priv_auto	= sizeof(struct rk3066_dmc_dram_info),
 #if IS_ENABLED(CONFIG_TPL_BUILD)
+	.priv_auto	= sizeof(struct rk3066_dmc_dram_info),
 	.plat_auto	= sizeof(struct rk3066_dmc_sdram_params),
 #endif
 };
