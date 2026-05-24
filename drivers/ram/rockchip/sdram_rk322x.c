@@ -23,7 +23,12 @@
 #include <linux/delay.h>
 #include <linux/err.h>
 
+#define GRF_BASE			0x11000000
+
+#if IS_ENABLED(CONFIG_TPL_BUILD)
+
 DECLARE_GLOBAL_DATA_PTR;
+
 struct chan_info {
 	struct rk322x_ddr_pctl *pctl;
 	struct rk322x_ddr_phy *phy;
@@ -32,7 +37,6 @@ struct chan_info {
 
 struct dram_info {
 	struct chan_info chan[1];
-	struct ram_info info;
 	struct clk ddr_clk;
 	struct rk322x_cru *cru;
 	struct rk322x_grf *grf;
@@ -50,7 +54,6 @@ struct rk322x_sdram_params {
 		struct regmap *map;
 };
 
-#ifdef CONFIG_TPL_BUILD
 /*
  * [7:6]  bank(n:n bit bank)
  * [5:4]  row(13+n)
@@ -752,7 +755,6 @@ static int rk322x_dmc_of_to_plat(struct udevice *dev)
 
 	return 0;
 }
-#endif /* CONFIG_TPL_BUILD */
 
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
 static int conv_of_plat(struct udevice *dev)
@@ -779,15 +781,12 @@ static int conv_of_plat(struct udevice *dev)
 
 static int rk322x_dmc_probe(struct udevice *dev)
 {
-#ifdef CONFIG_TPL_BUILD
 	struct rk322x_sdram_params *plat = dev_get_plat(dev);
 	int ret;
 	struct udevice *dev_clk;
-#endif
 	struct dram_info *priv = dev_get_priv(dev);
 
-	priv->grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
-#ifdef CONFIG_TPL_BUILD
+	priv->grf = (void *)GRF_BASE;
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
 	ret = conv_of_plat(dev);
 	if (ret)
@@ -811,20 +810,22 @@ static int rk322x_dmc_probe(struct udevice *dev)
 	ret = sdram_init(priv, plat);
 	if (ret)
 		return ret;
-#else
-	priv->info.base = CFG_SYS_SDRAM_BASE;
-	priv->info.size = rockchip_sdram_size(
-			(phys_addr_t)&priv->grf->os_reg[2]);
-#endif
 
 	return 0;
 }
 
+#endif /* IS_ENABLED(CONFIG_TPL_BUILD) */
+
 static int rk322x_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct rk322x_grf * const grf = (void *)GRF_BASE;
 
-	*info = priv->info;
+	/* SDRAM size is not used during DRAM init, skip to save code size */
+	if (IS_ENABLED(CONFIG_TPL_BUILD))
+		return 0;
+
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&grf->os_reg[2]);
 
 	return 0;
 }
@@ -838,17 +839,15 @@ static const struct udevice_id rk322x_dmc_ids[] = {
 	{ }
 };
 
-U_BOOT_DRIVER(dmc_rk322x) = {
-	.name = "rockchip_rk322x_dmc",
+U_BOOT_DRIVER(rockchip_rk3228_dmc) = {
+	.name = "rockchip_rk3228_dmc",
 	.id = UCLASS_RAM,
 	.of_match = rk322x_dmc_ids,
 	.ops = &rk322x_dmc_ops,
-#ifdef CONFIG_TPL_BUILD
+#if IS_ENABLED(CONFIG_TPL_BUILD)
 	.of_to_plat = rk322x_dmc_of_to_plat,
-#endif
 	.probe = rk322x_dmc_probe,
 	.priv_auto	= sizeof(struct dram_info),
-#ifdef CONFIG_TPL_BUILD
 	.plat_auto	= sizeof(struct rk322x_sdram_params),
 #endif
 };
