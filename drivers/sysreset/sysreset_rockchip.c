@@ -4,10 +4,11 @@
  */
 
 #include <dm.h>
-#include <errno.h>
+#include <dm/device-internal.h>
+#include <dm/lists.h>
+#include <stdlib.h>
 #include <sysreset.h>
 #include <asm/arch-rockchip/clock.h>
-#include <asm/arch-rockchip/cru_rk3328.h>
 #include <asm/arch-rockchip/hardware.h>
 #include <linux/err.h>
 
@@ -42,3 +43,26 @@ U_BOOT_DRIVER(sysreset_rockchip) = {
 	.id	= UCLASS_SYSRESET,
 	.ops	= &rockchip_sysreset,
 };
+
+int rockchip_sysreset_bind(struct udevice *pdev,
+			   unsigned long cru_base,
+			   unsigned int glb_rst_st,
+			   unsigned int glb_srst_fst,
+			   unsigned int glb_srst_snd)
+{
+	struct udevice *sysreset_dev;
+	struct sysreset_reg *priv;
+	int ret;
+
+	ret = device_bind_driver(pdev, "rockchip_sysreset", "sysreset",
+				 &sysreset_dev);
+	if (ret)
+		return ret;
+
+	priv = malloc(sizeof(struct sysreset_reg));
+	priv->glb_srst_fst_value = glb_srst_fst;
+	priv->glb_srst_snd_value = glb_srst_snd;
+	dev_set_priv(sysreset_dev, priv);
+
+	return 0;
+}
