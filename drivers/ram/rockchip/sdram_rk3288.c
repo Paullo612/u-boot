@@ -30,6 +30,11 @@
 #include <power/regulator.h>
 #include <power/rk8xx_pmic.h>
 
+#define PMU_BASE			0xff730000
+
+#if defined(CONFIG_TPL_BUILD) || \
+	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
+
 struct chan_info {
 	struct rk3288_ddr_pctl *pctl;
 	struct rk3288_ddr_publ *publ;
@@ -38,7 +43,6 @@ struct chan_info {
 
 struct dram_info {
 	struct chan_info chan[2];
-	struct ram_info info;
 	struct clk ddr_clk;
 	struct rockchip_cru *cru;
 	struct rk3288_grf *grf;
@@ -83,8 +87,6 @@ const int ddrconf_table[] = {
 #define DQS_GATE_TRAINING_ERROR_RANK0	(1 << 4)
 #define DQS_GATE_TRAINING_ERROR_RANK1	(2 << 4)
 
-#if defined(CONFIG_TPL_BUILD) || \
-	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
 static void copy_to_reg(u32 *dest, const u32 *src, u32 n)
 {
 	int i;
@@ -1013,7 +1015,6 @@ static int rk3288_dmc_of_to_plat(struct udevice *dev)
 
 	return 0;
 }
-#endif /* CONFIG_XPL_BUILD */
 
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
 static int conv_of_plat(struct udevice *dev)
@@ -1040,18 +1041,13 @@ static int conv_of_plat(struct udevice *dev)
 
 static int rk3288_dmc_probe(struct udevice *dev)
 {
-#if defined(CONFIG_TPL_BUILD) || \
-	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
 	struct rk3288_sdram_params *plat = dev_get_plat(dev);
 	struct udevice *dev_clk;
 	struct regmap *map;
 	int ret;
-#endif
 	struct dram_info *priv = dev_get_priv(dev);
 
 	priv->pmu = syscon_get_first_range(ROCKCHIP_SYSCON_PMU);
-#if defined(CONFIG_TPL_BUILD) || \
-	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
 	ret = conv_of_plat(dev);
 	if (ret)
@@ -1086,20 +1082,23 @@ static int rk3288_dmc_probe(struct udevice *dev)
 	ret = setup_sdram(dev);
 	if (ret)
 		return ret;
-#else
-	priv->info.base = CFG_SYS_SDRAM_BASE;
-	priv->info.size = rockchip_sdram_size(
-			(phys_addr_t)&priv->pmu->sys_reg[2]);
-#endif
 
 	return 0;
 }
 
+#endif /* CONFIG_TPL_BUILD || (!CONFIG_TPL && CONFIG_XPL_BUILD) */
+
 static int rk3288_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct rk3288_pmu * const pmu = (void *)PMU_BASE;
 
-	*info = priv->info;
+	/* SDRAM size is not used during DRAM init, skip to save code size */
+	if (IS_ENABLED(CONFIG_TPL_BUILD) ||
+	    (!IS_ENABLED(CONFIG_TPL) && IS_ENABLED(CONFIG_XPL_BUILD)))
+		return 0;
+
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&pmu->sys_reg[2]);
 
 	return 0;
 }
@@ -1121,11 +1120,8 @@ U_BOOT_DRIVER(rockchip_rk3288_dmc) = {
 #if defined(CONFIG_TPL_BUILD) || \
 	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
 	.of_to_plat = rk3288_dmc_of_to_plat,
-#endif
 	.probe = rk3288_dmc_probe,
 	.priv_auto	= sizeof(struct dram_info),
-#if defined(CONFIG_TPL_BUILD) || \
-	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
 	.plat_auto	= sizeof(struct rk3288_sdram_params),
 #endif
 };
