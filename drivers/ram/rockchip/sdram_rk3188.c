@@ -28,6 +28,10 @@
 #include <linux/delay.h>
 #include <linux/err.h>
 
+#define PMU_BASE			0x20004000
+
+#if IS_ENABLED(CONFIG_XPL_BUILD)
+
 struct chan_info {
 	struct rk3288_ddr_pctl *pctl;
 	struct rk3288_ddr_publ *publ;
@@ -36,7 +40,6 @@ struct chan_info {
 
 struct dram_info {
 	struct chan_info chan[1];
-	struct ram_info info;
 	struct clk ddr_clk;
 	struct rk3188_cru *cru;
 	struct rk3188_grf *grf;
@@ -84,7 +87,6 @@ const int ddrconf_table[] = {
 #define DQS_GATE_TRAINING_ERROR_RANK0	(1 << 4)
 #define DQS_GATE_TRAINING_ERROR_RANK1	(2 << 4)
 
-#ifdef CONFIG_XPL_BUILD
 static void copy_to_reg(u32 *dest, const u32 *src, u32 n)
 {
 	int i;
@@ -851,7 +853,6 @@ static int rk3188_dmc_of_to_plat(struct udevice *dev)
 
 	return 0;
 }
-#endif /* CONFIG_XPL_BUILD */
 
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
 static int conv_of_plat(struct udevice *dev)
@@ -878,17 +879,14 @@ static int conv_of_plat(struct udevice *dev)
 
 static int rk3188_dmc_probe(struct udevice *dev)
 {
-#ifdef CONFIG_XPL_BUILD
 	struct rk3188_sdram_params *plat = dev_get_plat(dev);
 	struct regmap *map;
 	struct udevice *dev_clk;
 	int ret;
-#endif
 	struct dram_info *priv = dev_get_priv(dev);
 
 	priv->pmu = syscon_get_first_range(ROCKCHIP_SYSCON_PMU);
 
-#ifdef CONFIG_XPL_BUILD
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
 	ret = conv_of_plat(dev);
 	if (ret)
@@ -918,20 +916,22 @@ static int rk3188_dmc_probe(struct udevice *dev)
 	ret = setup_sdram(dev);
 	if (ret)
 		return ret;
-#else
-	priv->info.base = CFG_SYS_SDRAM_BASE;
-	priv->info.size = rockchip_sdram_size(
-				(phys_addr_t)&priv->pmu->sys_reg[2]);
-#endif
 
 	return 0;
 }
 
+#endif /* IS_ENABLED(CONFIG_XPL_BUILD) */
+
 static int rk3188_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct rk3188_pmu * const pmu = (void *)PMU_BASE;
 
-	*info = priv->info;
+	/* SDRAM size is not used during DRAM init, skip to save code size */
+	if (IS_ENABLED(CONFIG_XPL_BUILD))
+		return 0;
+
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&pmu->sys_reg[2]);
 
 	return 0;
 }
@@ -950,12 +950,10 @@ U_BOOT_DRIVER(rockchip_rk3188_dmc) = {
 	.id = UCLASS_RAM,
 	.of_match = rk3188_dmc_ids,
 	.ops = &rk3188_dmc_ops,
-#ifdef CONFIG_XPL_BUILD
+#if IS_ENABLED(CONFIG_XPL_BUILD)
 	.of_to_plat = rk3188_dmc_of_to_plat,
-#endif
 	.probe = rk3188_dmc_probe,
 	.priv_auto	= sizeof(struct dram_info),
-#ifdef CONFIG_XPL_BUILD
 	.plat_auto	= sizeof(struct rk3188_sdram_params),
 #endif
 };
