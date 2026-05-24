@@ -51,6 +51,8 @@ struct rk3188_cru {
 };
 check_member(rk3188_cru, cru_glb_cnt_th, 0x0140);
 
+#define RK3188_CRU_BASE			0x20000000
+
 /* CRU_CLKSEL0_CON */
 enum {
 	/* a9_core_div: core = core_src / (a9_core_div + 1) */
