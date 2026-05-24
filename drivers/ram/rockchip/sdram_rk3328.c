@@ -21,20 +21,19 @@
 #include <asm/arch-rockchip/uart.h>
 #include <linux/delay.h>
 
+#define GRF_BASE			0xff100000
+
+#if IS_ENABLED(CONFIG_TPL_BUILD)
+
 struct dram_info {
-#ifdef CONFIG_TPL_BUILD
 	struct ddr_pctl_regs *pctl;
 	struct ddr_phy_regs *phy;
 	struct clk ddr_clk;
 	struct rk3328_cru *cru;
 	struct msch_regs *msch;
 	struct rk3328_ddr_grf_regs *ddr_grf;
-#endif
-	struct ram_info info;
 	struct rk3328_grf_regs *grf;
 };
-
-#ifdef CONFIG_TPL_BUILD
 
 struct rk3328_sdram_channel sdram_ch;
 
@@ -511,7 +510,7 @@ static int sdram_init_detect(struct dram_info *dram,
 	return 0;
 }
 
-static int rk3328_dmc_init(struct udevice *dev)
+static int rk3328_dmc_probe(struct udevice *dev)
 {
 	struct dram_info *priv = dev_get_priv(dev);
 	struct rockchip_dmc_plat *plat = dev_get_plat(dev);
@@ -568,30 +567,18 @@ static int rk3328_dmc_of_to_plat(struct udevice *dev)
 	return 0;
 }
 
-#endif
-
-static int rk3328_dmc_probe(struct udevice *dev)
-{
-#ifdef CONFIG_TPL_BUILD
-	if (rk3328_dmc_init(dev))
-		return 0;
-#else
-	struct dram_info *priv = dev_get_priv(dev);
-
-	priv->grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
-	debug("%s: grf=%p\n", __func__, priv->grf);
-	priv->info.base = CFG_SYS_SDRAM_BASE;
-	priv->info.size = rockchip_sdram_size(
-				(phys_addr_t)&priv->grf->os_reg[2]);
-#endif
-	return 0;
-}
+#endif /* IS_ENABLED(CONFIG_TPL_BUILD) */
 
 static int rk3328_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct rk3328_grf_regs * const grf = (void *)GRF_BASE;
 
-	*info = priv->info;
+	/* SDRAM size is not used during DRAM init, skip to save code size */
+	if (IS_ENABLED(CONFIG_TPL_BUILD))
+		return 0;
+
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&grf->os_reg[2]);
 
 	return 0;
 }
@@ -610,12 +597,10 @@ U_BOOT_DRIVER(rockchip_rk3328_dmc) = {
 	.id = UCLASS_RAM,
 	.of_match = rk3328_dmc_ids,
 	.ops = &rk3328_dmc_ops,
-#ifdef CONFIG_TPL_BUILD
+#if IS_ENABLED(CONFIG_TPL_BUILD)
 	.of_to_plat = rk3328_dmc_of_to_plat,
-#endif
 	.probe = rk3328_dmc_probe,
 	.priv_auto	= sizeof(struct dram_info),
-#ifdef CONFIG_TPL_BUILD
 	.plat_auto	= sizeof(struct rockchip_dmc_plat),
 #endif
 };
