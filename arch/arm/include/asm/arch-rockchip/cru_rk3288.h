@@ -61,6 +61,14 @@ struct rockchip_cru {
 check_member(rockchip_cru, cru_emmc_con[1], 0x021c);
 
 #define RK3288_CRU_BASE			0xff500000
+#define RK3288_PLL_CON(x)		((x) * 0x4)
+#define RK3288_MODE_CON			0x0050
+#define RK3288_CLKSEL_CON(x)		(RK3288_CRU_BASE + 0x0060 + (x) * 0x4)
+#define RK3288_CLKGATE_CON(x)		(RK3288_CRU_BASE + 0x0160 + (x) * 0x4)
+#define RK3288_GLB_SRST_FST		0x01b0
+#define RK3288_GLB_SRST_SND		0x01b4
+#define RK3288_SOFTRST_CON(x)		(RK3288_CRU_BASE + 0x01b8 + (x) * 0x4)
+#define RK3288_GLB_RST_ST		0x01f8
 
 /* CRU_CLKSEL11_CON */
 enum {

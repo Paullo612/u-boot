@@ -114,7 +114,20 @@ struct cpu_rate_table {
 };
 
 #define PX30_CRU_BASE			0xff2b0000
+#define PX30_PLL_CON(x)			((x) * 0x4)
+#define PX30_MODE_CON			0x00a0
+#define PX30_GLB_RST_ST			0x00b4
+#define PX30_GLB_SRST_FST		0x00b8
+#define PX30_GLB_SRST_SND		0x00bc
+#define PX30_CLKSEL_CON(x)		(PX30_CRU_BASE + 0x0100 + (x) * 0x4)
+#define PX30_CLKGATE_CON(x)		(PX30_CRU_BASE + 0x0200 + (x) * 0x4)
+#define PX30_SOFTRST_CON(x)		(PX30_CRU_BASE + 0x0300 + (x) * 0x4)
+
 #define PX30_PMU_CRU_BASE		0xff2bc000
+#define PX30_PMU_PLL_CON(x)		((x) * 0x4)
+#define PX30_PMU_MODE_CON		0x0020
+#define PX30_PMU_CLKSEL_CON(x)		(PX30_PMU_CRU_BASE + 0x0040 + (x) * 0x4)
+#define PX30_PMU_CLKGATE_CON(x)		(PX30_PMU_CRU_BASE + 0x0080 + (x) * 0x4)
 
 enum {
 	/* PLLCON0*/
