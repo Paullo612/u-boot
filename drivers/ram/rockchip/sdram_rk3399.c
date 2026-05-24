@@ -26,6 +26,8 @@
 #include <linux/err.h>
 #include <time.h>
 
+#define PMUGRF_BASE			0xff320000
+
 #define PRESET_SGRF_HOLD(n)	((0x1 << (6 + 16)) | ((n) << 6))
 #define PRESET_GPIO0_HOLD(n)	((0x1 << (7 + 16)) | ((n) << 7))
 #define PRESET_GPIO1_HOLD(n)	((0x1 << (8 + 16)) | ((n) << 8))
@@ -74,7 +76,6 @@ struct dram_info {
 	struct rk3399_pmusgrf_regs *pmusgrf;
 	struct rk3399_ddr_cic_regs *cic;
 	const struct sdram_rk3399_ops *ops;
-	struct ram_info info;
 	struct rk3399_pmugrf_regs *pmugrf;
 };
 
@@ -3102,6 +3103,7 @@ static int rk3399_dmc_init(struct udevice *dev)
 	priv->cic = syscon_get_first_range(ROCKCHIP_SYSCON_CIC);
 	priv->grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
 	priv->pmu = syscon_get_first_range(ROCKCHIP_SYSCON_PMU);
+	priv->pmugrf = syscon_get_first_range(ROCKCHIP_SYSCON_PMUGRF);
 	priv->pmusgrf = syscon_get_first_range(ROCKCHIP_SYSCON_PMUSGRF);
 	priv->pmucru = rockchip_get_pmucru();
 	priv->cru = rockchip_get_cru();
@@ -3149,31 +3151,25 @@ static int rk3399_dmc_init(struct udevice *dev)
 
 static int rk3399_dmc_probe(struct udevice *dev)
 {
-	struct dram_info *priv = dev_get_priv(dev);
-
-	priv->pmugrf = syscon_get_first_range(ROCKCHIP_SYSCON_PMUGRF);
-	debug("%s: pmugrf = %p\n", __func__, priv->pmugrf);
 	if (phase_sdram_init() && rk3399_dmc_init(dev))
 		return 0;
-
-	/*
-	 * There is no point in checking the SDRAM size in TPL as it is not
-	 * used, so avoid the code size increment.
-	 */
-	if (!IS_ENABLED(CONFIG_TPL_BUILD)) {
-		priv->info.base = CFG_SYS_SDRAM_BASE;
-		priv->info.size = rockchip_sdram_size(
-			(phys_addr_t)&priv->pmugrf->os_reg2);
-	}
 
 	return 0;
 }
 
 static int rk3399_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct rk3399_pmugrf_regs * const pmugrf = (void *)PMUGRF_BASE;
 
-	*info = priv->info;
+	/*
+	 * There is no point in checking the SDRAM size in TPL as it is not
+	 * used, so avoid the code size increment.
+	 */
+	if (IS_ENABLED(CONFIG_TPL_BUILD))
+		return 0;
+
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&pmugrf->os_reg2);
 
 	return 0;
 }
@@ -3187,16 +3183,16 @@ static const struct udevice_id rk3399_dmc_ids[] = {
 	{ }
 };
 
-U_BOOT_DRIVER(dmc_rk3399) = {
+U_BOOT_DRIVER(rockchip_rk3399_dmc) = {
 	.name = "rockchip_rk3399_dmc",
 	.id = UCLASS_RAM,
 	.of_match = rk3399_dmc_ids,
 	.ops = &rk3399_dmc_ops,
 	.of_to_plat = rk3399_dmc_of_to_plat,
 	.probe = rk3399_dmc_probe,
-	.priv_auto	= sizeof(struct dram_info),
 #if defined(CONFIG_TPL_BUILD) || \
 	(!defined(CONFIG_TPL) && defined(CONFIG_XPL_BUILD))
+	.priv_auto	= sizeof(struct dram_info),
 	.plat_auto	= sizeof(struct rockchip_dmc_plat),
 #endif
 };
