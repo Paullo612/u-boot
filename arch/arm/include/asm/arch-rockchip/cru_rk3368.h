@@ -54,6 +54,8 @@ struct rk3368_clk_priv {
 	struct rk3368_cru *cru;
 };
 
+#define RK3368_CRU_BASE			0xff760000
+
 enum {
 	/* PLL CON0 */
 	PLL_NR_SHIFT			= 8,
