@@ -3,35 +3,19 @@
  * (C) Copyright 2019 Rockchip Electronics Co., Ltd.
  */
 
-#include <config.h>
 #include <dm.h>
 #include <ram.h>
-#include <syscon.h>
-#include <asm/arch-rockchip/clock.h>
 #include <asm/arch-rockchip/grf_rk3308.h>
 #include <asm/arch-rockchip/sdram.h>
 
-struct dram_info {
-	struct ram_info info;
-	struct rk3308_grf *grf;
-};
-
-static int rk3308_dmc_probe(struct udevice *dev)
-{
-	struct dram_info *priv = dev_get_priv(dev);
-
-	priv->grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
-	priv->info.base = CFG_SYS_SDRAM_BASE;
-	priv->info.size = rockchip_sdram_size((phys_addr_t)&priv->grf->os_reg2);
-
-	return 0;
-}
+#define GRF_BASE			0xff000000
 
 static int rk3308_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
-	struct dram_info *priv = dev_get_priv(dev);
+	static struct rk3308_grf * const grf = (void *)GRF_BASE;
 
-	*info = priv->info;
+	info->base = CFG_SYS_SDRAM_BASE;
+	info->size = rockchip_sdram_size((phys_addr_t)&grf->os_reg2);
 
 	return 0;
 }
@@ -45,11 +29,9 @@ static const struct udevice_id rk3308_dmc_ids[] = {
 	{ }
 };
 
-U_BOOT_DRIVER(dmc_rk3308) = {
+U_BOOT_DRIVER(rockchip_rk3308_dmc) = {
 	.name = "rockchip_rk3308_dmc",
 	.id = UCLASS_RAM,
 	.of_match = rk3308_dmc_ids,
 	.ops = &rk3308_dmc_ops,
-	.probe = rk3308_dmc_probe,
-	.priv_auto	= sizeof(struct dram_info),
 };
