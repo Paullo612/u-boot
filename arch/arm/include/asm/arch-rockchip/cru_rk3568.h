@@ -118,10 +118,22 @@ struct pll_rate_table {
 	unsigned int frac;
 };
 
-#define RK3568_PMU_MODE			0x80
+#define RK3568_PMU_CRU_BASE		0xfdd00000
 #define RK3568_PMU_PLL_CON(x)		((x) * 0x4)
+#define RK3568_PMU_MODE			0x0080
+#define RK3568_PMU_CLKSEL_CON(x)	(RK3568_PMU_CRU_BASE + 0x0100 + (x) * 0x4)
+#define RK3568_PMU_CLKGATE_CON(x)	(RK3568_PMU_CRU_BASE + 0x0180 + (x) * 0x4)
+#define RK3568_PMU_SOFTRST_CON(x)	(RK3568_PMU_CRU_BASE + 0x0200 + (x) * 0x4)
+
+#define RK3568_CRU_BASE			0xfdd20000
 #define RK3568_PLL_CON(x)		((x) * 0x4)
-#define RK3568_MODE_CON			0xc0
+#define RK3568_MODE_CON			0x00c0
+#define RK3568_GLB_SRST_FST		0x00d4
+#define RK3568_GLB_SRST_SND		0x00d8
+#define RK3568_GLB_RST_ST		0x00e0
+#define RK3568_CLKSEL_CON(x)		(RK3568_CRU_BASE + 0x0100 + (x) * 0x4)
+#define RK3568_CLKGATE_CON(x)		(RK3568_CRU_BASE + 0x0300 + (x) * 0x4)
+#define RK3568_SOFTRST_CON(x)		(RK3568_CRU_BASE + 0x0400 + (x) * 0x4)
 
 enum {
 	/* CRU_PMU_CLK_SEL0_CON */
