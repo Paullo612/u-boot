@@ -64,6 +64,8 @@ struct pll_div {
 	u32 frac;
 };
 
+#define RK322X_CRU_BASE			0x110e0000
+
 enum {
 	/* PLLCON0*/
 	PLL_BP_SHIFT		= 15,
