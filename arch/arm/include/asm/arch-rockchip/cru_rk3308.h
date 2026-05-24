@@ -24,9 +24,6 @@
 #define AUDIO_HCLK_HZ	100000000
 #define AUDIO_PCLK_HZ	100000000
 
-#define RK3308_PLL_CON(x)	((x) * 0x4)
-#define RK3308_MODE_CON		0xa0
-
 /* RK3308 pll id */
 enum rk3308_pll_id {
 	APLL,
@@ -89,6 +86,16 @@ struct rk3308_cru {
 	unsigned int sdio_con[2];
 	unsigned int emmc_con[2];
 };
+
+#define RK3308_CRU_BASE			0xff500000
+#define RK3308_PLL_CON(x)		((x) * 0x4)
+#define RK3308_MODE_CON			0x00a0
+#define RK3308_GLB_RST_ST		0x00b4
+#define RK3308_GLB_SRST_FST		0x00b8
+#define RK3308_GLB_SRST_SND		0x00bc
+#define RK3308_CLKSEL_CON(x)		(RK3308_CRU_BASE + 0x0100 + (x) * 0x4)
+#define RK3308_CLKGATE_CON(x)		(RK3308_CRU_BASE + 0x0300 + (x) * 0x4)
+#define RK3308_SOFTRST_CON(x)		(RK3308_CRU_BASE + 0x0400 + (x) * 0x4)
 
 enum {
 	/* PLLCON0*/
