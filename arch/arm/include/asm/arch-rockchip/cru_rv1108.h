@@ -60,6 +60,8 @@ struct pll_div {
 	u32 frac;
 };
 
+#define RV1108_CRU_BASE			0x20200000
+
 enum {
 	/* PLL CON0 */
 	FBDIV_MASK		= 0xfff,
