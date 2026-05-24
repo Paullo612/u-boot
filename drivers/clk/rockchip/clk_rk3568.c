@@ -2907,10 +2907,6 @@ static int rk3568_clk_probe(struct udevice *dev)
 	struct rk3568_clk_priv *priv = dev_get_priv(dev);
 	int ret;
 
-	priv->grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
-	if (IS_ERR(priv->grf))
-		return PTR_ERR(priv->grf);
-
 	rk3568_clk_init(priv);
 
 	/* Process 'assigned-{clocks/clock-parents/clock-rates}' properties */
