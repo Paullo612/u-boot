@@ -148,8 +148,10 @@ struct cpu_rate_table {
 	unsigned int pclk_div;
 };
 
+#define RV1126_PMU_CRU_BASE		0xff480000
 #define RV1126_PMU_MODE			0x0
 #define RV1126_PMU_PLL_CON(x)		((x) * 0x4 + 0x10)
+#define RV1126_CRU_BASE			0xff490000
 #define RV1126_PLL_CON(x)		((x) * 0x4)
 #define RV1126_MODE_CON			0x90
 
