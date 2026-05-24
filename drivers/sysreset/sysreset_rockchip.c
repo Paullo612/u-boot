@@ -10,22 +10,26 @@
 #include <sysreset.h>
 #include <asm/arch-rockchip/clock.h>
 #include <asm/arch-rockchip/hardware.h>
-#include <linux/err.h>
 
-int rockchip_sysreset_request(struct udevice *dev, enum sysreset_t type)
+struct sysreset_reg {
+	unsigned long cru_base;
+	unsigned int glb_srst_fst;
+	unsigned int glb_srst_snd;
+};
+
+static int rockchip_sysreset_request(struct udevice *dev, enum sysreset_t type)
 {
-	struct sysreset_reg *offset = dev_get_priv(dev);
-	unsigned long cru_base = (unsigned long)rockchip_get_cru();
+	struct sysreset_reg *priv = dev_get_priv(dev);
 
-	if (IS_ERR_VALUE(cru_base))
-		return (int)cru_base;
+	if (!priv->cru_base)
+		return -EPROTONOSUPPORT;
 
 	switch (type) {
 	case SYSRESET_WARM:
-		writel(0xeca8, cru_base + offset->glb_srst_snd_value);
+		writel(0xeca8, priv->cru_base + priv->glb_srst_snd);
 		break;
 	case SYSRESET_COLD:
-		writel(0xfdb9, cru_base + offset->glb_srst_fst_value);
+		writel(0xfdb9, priv->cru_base + priv->glb_srst_fst);
 		break;
 	default:
 		return -EPROTONOSUPPORT;
@@ -60,8 +64,9 @@ int rockchip_sysreset_bind(struct udevice *pdev,
 		return ret;
 
 	priv = malloc(sizeof(struct sysreset_reg));
-	priv->glb_srst_fst_value = glb_srst_fst;
-	priv->glb_srst_snd_value = glb_srst_snd;
+	priv->cru_base = cru_base;
+	priv->glb_srst_fst = glb_srst_fst;
+	priv->glb_srst_snd = glb_srst_snd;
 	dev_set_priv(sysreset_dev, priv);
 
 	return 0;
