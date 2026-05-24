@@ -2395,8 +2395,6 @@ static int rk3576_clk_probe(struct udevice *dev)
 	struct rk3576_clk_priv *priv = dev_get_priv(dev);
 	int ret;
 
-	priv->sync_kernel = false;
-
 #ifdef CONFIG_SPL_BUILD
 	/* relase presetn_bigcore_biu/cru/grf */
 	writel(0x1c001c00, 0x26010010);
@@ -2455,8 +2453,6 @@ static int rk3576_clk_probe(struct udevice *dev)
 	ret = clk_set_defaults(dev, 1);
 	if (ret)
 		debug("%s clk_set_defaults failed %d\n", __func__, ret);
-	else
-		priv->sync_kernel = true;
 
 	return 0;
 }

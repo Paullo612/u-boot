@@ -1961,8 +1961,6 @@ static int rk3588_clk_probe(struct udevice *dev)
 	struct rk3588_clk_priv *priv = dev_get_priv(dev);
 	int ret;
 
-	priv->sync_kernel = false;
-
 #ifdef CONFIG_XPL_BUILD
 	rockchip_pll_set_rate(&rk3588_pll_clks[B0PLL], priv->cru,
 			      B0PLL, LPLL_HZ);
@@ -1984,8 +1982,6 @@ static int rk3588_clk_probe(struct udevice *dev)
 	ret = clk_set_defaults(dev, 1);
 	if (ret)
 		debug("%s clk_set_defaults failed %d\n", __func__, ret);
-	else
-		priv->sync_kernel = true;
 
 	return 0;
 }
