@@ -11,7 +11,6 @@
 
 static const struct udevice_id rv1126_syscon_ids[] = {
 	{ .compatible = "rockchip,rv1126-grf", .data = ROCKCHIP_SYSCON_GRF },
-	{ .compatible = "rockchip,rv1126-pmugrf", .data = ROCKCHIP_SYSCON_PMUGRF },
 	{ }
 };
 
@@ -23,27 +22,3 @@ U_BOOT_DRIVER(syscon_rv1126) = {
 	.bind = dm_scan_fdt_dev,
 #endif
 };
-
-#if CONFIG_IS_ENABLED(OF_PLATDATA)
-static int rv1126_syscon_bind_of_plat(struct udevice *dev)
-{
-	dev->driver_data = dev->driver->of_match->data;
-	debug("syscon: %s %d\n", dev->name, (uint)dev->driver_data);
-
-	return 0;
-}
-
-U_BOOT_DRIVER(rockchip_rv1126_pmu) = {
-	.name = "rockchip_rv1126_pmu",
-	.id = UCLASS_SYSCON,
-	.of_match = rv1126_syscon_ids,
-	.bind = rv1126_syscon_bind_of_plat,
-};
-
-U_BOOT_DRIVER(rockchip_rv1126_pmugrf) = {
-	.name = "rockchip_rv1126_pmugrf",
-	.id = UCLASS_SYSCON,
-	.of_match = rv1126_syscon_ids + 1,
-	.bind = rv1126_syscon_bind_of_plat,
-};
-#endif
