@@ -669,23 +669,14 @@ static int rk3066_clk_probe(struct udevice *dev)
 
 static int rk3066_clk_bind(struct udevice *dev)
 {
-	struct udevice *sys_child;
-	struct sysreset_reg *priv;
 	int reg_offset, ret;
 
 	/* The reset driver does not have a device node, so bind it here. */
-	ret = device_bind(dev, DM_DRIVER_GET(sysreset_rockchip), "sysreset",
-			  NULL, ofnode_null(), &sys_child);
-	if (ret) {
+	ret = rockchip_sysreset_bind(dev, RK3066_CRU_BASE, 0,
+			offsetof(struct rk3066_cru, cru_glb_srst_fst_value),
+			offsetof(struct rk3066_cru, cru_glb_srst_snd_value));
+	if (ret)
 		dev_dbg(dev, "Warning: No sysreset driver: ret=%d\n", ret);
-	} else {
-		priv = malloc(sizeof(struct sysreset_reg));
-		priv->glb_srst_fst_value = offsetof(struct rk3066_cru,
-						    cru_glb_srst_fst_value);
-		priv->glb_srst_snd_value = offsetof(struct rk3066_cru,
-						    cru_glb_srst_snd_value);
-		dev_set_priv(sys_child, priv);
-	}
 
 	if (CONFIG_IS_ENABLED(RESET_ROCKCHIP)) {
 		reg_offset = offsetof(struct rk3066_cru, cru_softrst_con[0]);

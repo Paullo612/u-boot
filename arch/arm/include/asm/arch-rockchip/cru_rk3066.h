@@ -60,6 +60,8 @@ struct rk3066_cru {
 
 check_member(rk3066_cru, cru_glb_cnt_th, 0x0140);
 
+#define RK3066_CRU_BASE			0x20000000
+
 /* CRU_CLKSEL0_CON */
 enum {
 	REG(CPU_ACLK_PLL, 8, 8),
