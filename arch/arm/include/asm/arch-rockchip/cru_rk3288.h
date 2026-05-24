@@ -60,6 +60,8 @@ struct rockchip_cru {
 };
 check_member(rockchip_cru, cru_emmc_con[1], 0x021c);
 
+#define RK3288_CRU_BASE			0xff500000
+
 /* CRU_CLKSEL11_CON */
 enum {
 	HSICPHY_DIV_SHIFT	= 8,
