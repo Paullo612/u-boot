@@ -4,40 +4,26 @@
  * Author: Jagan Teki <jagan@amarulasolutions.com>
  */
 
+#include <dm.h>
 #include <env.h>
-#include <init.h>
-#include <asm/arch-rockchip/clock.h>
+#include <sysreset.h>
 #include <asm/arch-rockchip/cru.h>
-#include <asm/arch-rockchip/hardware.h>
-#include <linux/err.h>
 
-char *get_reset_cause(void)
+const char *get_reset_cause(void)
 {
-	struct rockchip_cru *cru = rockchip_get_cru();
-	char *cause = NULL;
+	static char cause[16];
+	struct udevice *dev;
+	int ret;
 
-	if (IS_ERR(cru))
-		return cause;
+	ret = uclass_get_device_by_driver(UCLASS_SYSRESET,
+			DM_DRIVER_GET(sysreset_rockchip), &dev);
+	if (ret)
+		return "unknown reset";
 
-	switch (cru->glb_rst_st) {
-	case GLB_POR_RST:
-		cause = "POR";
-		break;
-	case FST_GLB_RST_ST:
-	case SND_GLB_RST_ST:
-		cause = "RST";
-		break;
-	case FST_GLB_TSADC_RST_ST:
-	case SND_GLB_TSADC_RST_ST:
-		cause = "THERMAL";
-		break;
-	case FST_GLB_WDT_RST_ST:
-	case SND_GLB_WDT_RST_ST:
-		cause = "WDOG";
-		break;
-	default:
-		cause = "unknown reset";
-	}
+	cause[0] = '\0';
+	ret = sysreset_get_status(dev, cause, sizeof(cause));
+	if (ret)
+		return "unknown reset";
 
 	return cause;
 }
@@ -45,7 +31,7 @@ char *get_reset_cause(void)
 #if IS_ENABLED(CONFIG_DISPLAY_CPUINFO)
 int print_cpuinfo(void)
 {
-	char *cause = get_reset_cause();
+	const char *cause = get_reset_cause();
 
 	printf("SoC: Rockchip %s\n", CONFIG_SYS_SOC);
 	printf("Reset cause: %s\n", cause);
