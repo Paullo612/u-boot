@@ -113,6 +113,9 @@ struct cpu_rate_table {
 	unsigned int pclk_div;
 };
 
+#define PX30_CRU_BASE			0xff2b0000
+#define PX30_PMU_CRU_BASE		0xff2bc000
+
 enum {
 	/* PLLCON0*/
 	PLL_BP_SHIFT		= 15,
