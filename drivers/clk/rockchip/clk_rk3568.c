@@ -94,44 +94,20 @@ static ulong
 rk3568_pmu_pll_set_rate(struct rk3568_clk_priv *priv,
 			ulong pll_id, ulong rate)
 {
-	struct udevice *pmucru_dev;
-	struct rk3568_pmuclk_priv *pmu_priv;
-	int ret;
+	static void * const pmu_cru_base = (void *)RK3568_PMU_CRU_BASE;
 
-	ret = uclass_get_device_by_driver(UCLASS_CLK,
-					  DM_DRIVER_GET(rockchip_rk3568_pmucru),
-					  &pmucru_dev);
-	if (ret) {
-		printf("%s: could not find pmucru device\n", __func__);
-		return ret;
-	}
-	pmu_priv = dev_get_priv(pmucru_dev);
-
-	rockchip_pll_set_rate(&rk3568_pll_clks[pll_id],
-			      pmu_priv->pmucru, pll_id, rate);
-
-	return 0;
+	return rockchip_pll_set_rate(&rk3568_pll_clks[pll_id],
+			      	     pmu_cru_base, pll_id, rate);
 }
 #endif
 
 static ulong rk3568_pmu_pll_get_rate(struct rk3568_clk_priv *priv,
 				     ulong pll_id)
 {
-	struct udevice *pmucru_dev;
-	struct rk3568_pmuclk_priv *pmu_priv;
-	int ret;
-
-	ret = uclass_get_device_by_driver(UCLASS_CLK,
-					  DM_DRIVER_GET(rockchip_rk3568_pmucru),
-					  &pmucru_dev);
-	if (ret) {
-		printf("%s: could not find pmucru device\n", __func__);
-		return ret;
-	}
-	pmu_priv = dev_get_priv(pmucru_dev);
+	static void * const pmu_cru_base = (void *)RK3568_PMU_CRU_BASE;
 
 	return rockchip_pll_get_rate(&rk3568_pll_clks[pll_id],
-				      pmu_priv->pmucru, pll_id);
+				     pmu_cru_base, pll_id);
 }
 
 /*
