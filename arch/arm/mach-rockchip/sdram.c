@@ -300,6 +300,10 @@ int dram_init_banksize(void)
 	size_t ram_top = (unsigned long)(gd->ram_size + CFG_SYS_SDRAM_BASE);
 	size_t top = min((unsigned long)ram_top, (unsigned long)(gd->ram_top));
 
+	if (IS_ENABLED(CONFIG_TPL_BUILD) &&
+	    IS_ENABLED(CONFIG_TPL_ROCKCHIP_BACK_TO_BROM))
+		return 0;
+
 #ifdef CONFIG_ARM64
 	int ret = rockchip_dram_init_banksize();
 

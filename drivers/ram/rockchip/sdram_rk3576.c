@@ -10,6 +10,15 @@
 #define PMU1GRF_BASE			0x26026000
 #define OS_REG2_REG			0x208
 
+#if IS_ENABLED(CONFIG_TPL_BUILD)
+
+int sdram_init(void)
+{
+	return -ENOSYS;
+}
+
+#else /* IS_ENABLED(CONFIG_TPL_BUILD) */
+
 static int rk3576_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
 	info->base = CFG_SYS_SDRAM_BASE;
@@ -33,3 +42,5 @@ U_BOOT_DRIVER(rockchip_rk3576_dmc) = {
 	.of_match = rk3576_dmc_ids,
 	.ops = &rk3576_dmc_ops,
 };
+
+#endif /* !IS_ENABLED(CONFIG_TPL_BUILD) */

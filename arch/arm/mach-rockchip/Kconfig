@@ -465,6 +465,7 @@ config ROCKCHIP_RK3568
 	bool "Support Rockchip RK3568"
 	select ARM64
 	select SUPPORT_SPL
+	select SUPPORT_TPL
 	select SPL
 	select CLK
 	select PINCTRL
@@ -488,6 +489,8 @@ config ROCKCHIP_RK3568
 	imply ROCKCHIP_OTP
 	imply SPL_ATF_NO_PLATFORM_PARAM if SPL_ATF
 	imply SPL_MMC_HS200_SUPPORT if SPL_MMC && MMC_HS200_SUPPORT
+	imply TPL_RAM if TPL
+	imply TPL_ROCKCHIP_COMMON_BOARD if TPL
 	help
 	  The Rockchip RK3568 is a ARM-based SoC with quad-core Cortex-A55,
 	  including NEON and GPU, 512K L3 cache, Mali-G52 based graphics,
@@ -499,6 +502,7 @@ config ROCKCHIP_RK3576
 	bool "Support Rockchip RK3576"
 	select ARM64
 	select SUPPORT_SPL
+	select SUPPORT_TPL
 	select SPL
 	select CLK
 	select PINCTRL
@@ -541,6 +545,8 @@ config ROCKCHIP_RK3576
 	imply SPL_SYSCON
 	imply ENV_RELOC_GD_ENV_ADDR
 	imply SYSRESET
+	imply TPL_RAM if TPL
+	imply TPL_ROCKCHIP_COMMON_BOARD if TPL
 	help
 	  The Rockchip RK3576 is a ARM-based SoC with quad-core Cortex-A72 and
 	  and quad-core Cortex-A53.

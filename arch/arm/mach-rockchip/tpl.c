@@ -21,6 +21,8 @@
 #include <timestamp.h>
 #endif
 
+int sdram_init(void);
+
 __weak void tpl_board_init(void)
 {
 }
@@ -60,7 +62,10 @@ void board_init_f(ulong dummy)
 
 	tpl_board_init();
 
-	ret = uclass_get_device(UCLASS_RAM, 0, &dev);
+	if (CONFIG_IS_ENABLED(DM))
+		ret = uclass_get_device(UCLASS_RAM, 0, &dev);
+	else
+		ret = sdram_init();
 	if (ret) {
 		printf("DRAM init failed: %d\n", ret);
 		return;

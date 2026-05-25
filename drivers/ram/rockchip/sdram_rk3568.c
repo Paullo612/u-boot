@@ -10,6 +10,15 @@
 
 #define PMUGRF_BASE			0xfdc20000
 
+#if IS_ENABLED(CONFIG_TPL_BUILD)
+
+int sdram_init(void)
+{
+	return -ENOSYS;
+}
+
+#else /* IS_ENABLED(CONFIG_TPL_BUILD) */
+
 static int rk3568_dmc_get_info(struct udevice *dev, struct ram_info *info)
 {
 	static struct rk3568_pmugrf * const pmugrf = (void *)PMUGRF_BASE;
@@ -35,3 +44,5 @@ U_BOOT_DRIVER(rockchip_rk3568_dmc) = {
 	.of_match = rk3568_dmc_ids,
 	.ops = &rk3568_dmc_ops,
 };
+
+#endif /* !IS_ENABLED(CONFIG_TPL_BUILD) */
