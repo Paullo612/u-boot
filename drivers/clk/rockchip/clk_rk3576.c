@@ -43,19 +43,19 @@ static struct rockchip_pll_rate_table rk3576_24m_pll_rates[] = {
 };
 
 static struct rockchip_pll_clock rk3576_pll_clks[] = {
-	[BPLL] = PLL(pll_rk3588, PLL_BPLL, RK3576_PLL_CON(0),
+	[BPLL] = PLL(pll_rk3588, PLL_BPLL, RK3576_BPLL_CON(0),
 		     RK3576_BPLL_MODE_CON0, 0, 15, 0, rk3576_24m_pll_rates),
-	[LPLL] = PLL(pll_rk3588, PLL_LPLL, RK3576_LPLL_CON(16),
+	[LPLL] = PLL(pll_rk3588, PLL_LPLL, RK3576_LPLL_CON(0),
 		     RK3576_LPLL_MODE_CON0, 0, 15, 0, rk3576_24m_pll_rates),
-	[VPLL] = PLL(pll_rk3588, PLL_VPLL, RK3576_PLL_CON(88),
+	[VPLL] = PLL(pll_rk3588, PLL_VPLL, RK3576_VPLL_CON(0),
 		     RK3576_MODE_CON0, 4, 15, 0, rk3576_24m_pll_rates),
-	[AUPLL] = PLL(pll_rk3588, PLL_AUPLL, RK3576_PLL_CON(96),
+	[AUPLL] = PLL(pll_rk3588, PLL_AUPLL, RK3576_AUPLL_CON(0),
 		      RK3576_MODE_CON0, 6, 15, 0, rk3576_24m_pll_rates),
-	[CPLL] = PLL(pll_rk3588, PLL_CPLL, RK3576_PLL_CON(104),
+	[CPLL] = PLL(pll_rk3588, PLL_CPLL, RK3576_CPLL_CON(0),
 		     RK3576_MODE_CON0, 8, 15, 0, rk3576_24m_pll_rates),
-	[GPLL] = PLL(pll_rk3588, PLL_GPLL, RK3576_PLL_CON(112),
+	[GPLL] = PLL(pll_rk3588, PLL_GPLL, RK3576_GPLL_CON(0),
 		     RK3576_MODE_CON0, 2, 15, 0, rk3576_24m_pll_rates),
-	[PPLL] = PLL(pll_rk3588, PLL_PPLL, RK3576_PMU_PLL_CON(128),
+	[PPLL] = PLL(pll_rk3588, PLL_PPLL, RK3576_PPLL_CON(0),
 		     RK3576_MODE_CON0, 10, 15, 0, rk3576_24m_pll_rates),
 };
 
@@ -2395,16 +2395,16 @@ static void rk3576_clk_init_xpl(void)
 	writel(0x1c001c00, 0x26010010);
 	/* set spll to normal mode */
 	writel(BITS_WITH_WMASK(2, 0x7U, 6),
-	       RK3576_SCRU_BASE + RK3576_PLL_CON(137));
+	       RK3576_CRU_BASE + RK3576_SPLL_CON(1));
 	writel(BITS_WITH_WMASK(1, 0x3U, 0),
-	       RK3576_SCRU_BASE + RK3576_MODE_CON0);
+	       RK3576_CRU_BASE + RK3576_SPLL_MODE_CON0);
 	/* fix ppll\aupll\cpll */
 	writel(BITS_WITH_WMASK(2, 0x7U, 6),
-	       RK3576_CRU_BASE + RK3576_PMU_PLL_CON(129));
+	       RK3576_CRU_BASE + RK3576_PPLL_CON(1));
 	writel(BITS_WITH_WMASK(2, 0x7U, 6),
-	       RK3576_CRU_BASE + RK3576_PLL_CON(97));
+	       RK3576_CRU_BASE + RK3576_AUPLL_CON(1));
 	writel(BITS_WITH_WMASK(2, 0x7U, 6),
-	       RK3576_CRU_BASE + RK3576_PLL_CON(105));
+	       RK3576_CRU_BASE + RK3576_CPLL_CON(1));
 	writel(BITS_WITH_WMASK(1, 0x3U, 6),
 	       RK3576_CRU_BASE + RK3576_MODE_CON0);
 	writel(BITS_WITH_WMASK(1, 0x3U, 8),
