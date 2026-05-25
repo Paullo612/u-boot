@@ -44,12 +44,11 @@ static struct rockchip_pll_rate_table rk3576_24m_pll_rates[] = {
 
 static struct rockchip_pll_clock rk3576_pll_clks[] = {
 	[BPLL] = PLL(pll_rk3588, PLL_BPLL, RK3576_PLL_CON(0),
-		      RK3576_BPLL_MODE_CON0, 0, 15, 0,
-		      rk3576_24m_pll_rates),
+		     RK3576_BPLL_MODE_CON0, 0, 15, 0, rk3576_24m_pll_rates),
 	[LPLL] = PLL(pll_rk3588, PLL_LPLL, RK3576_LPLL_CON(16),
 		     RK3576_LPLL_MODE_CON0, 0, 15, 0, rk3576_24m_pll_rates),
 	[VPLL] = PLL(pll_rk3588, PLL_VPLL, RK3576_PLL_CON(88),
-		      RK3576_LPLL_MODE_CON0, 4, 15, 0, rk3576_24m_pll_rates),
+		     RK3576_MODE_CON0, 4, 15, 0, rk3576_24m_pll_rates),
 	[AUPLL] = PLL(pll_rk3588, PLL_AUPLL, RK3576_PLL_CON(96),
 		      RK3576_MODE_CON0, 6, 15, 0, rk3576_24m_pll_rates),
 	[CPLL] = PLL(pll_rk3588, PLL_CPLL, RK3576_PLL_CON(104),
@@ -317,8 +316,7 @@ static ulong rk3576_top_set_clk(struct rk3576_clk_priv *priv,
 		rk_clrsetreg(&cru->clksel_con[10],
 			     ACLK_TOP_MID_DIV_MASK |
 			     ACLK_TOP_MID_SEL_MASK,
-			     (ACLK_TOP_MID_SEL_GPLL <<
-			      ACLK_TOP_MID_SEL_SHIFT) |
+			     (src_clk << ACLK_TOP_MID_SEL_SHIFT) |
 			     (src_clk_div - 1) << ACLK_TOP_MID_DIV_SHIFT);
 		break;
 	case PCLK_TOP_ROOT:
@@ -426,7 +424,7 @@ static ulong rk3576_i2c_set_clk(struct rk3576_clk_priv *priv, ulong clk_id,
 		src_clk = CLK_I2C_SEL_200M;
 	else if (rate >= 99 * MHz)
 		src_clk = CLK_I2C_SEL_100M;
-	if (rate >= 50 * MHz)
+	else if (rate >= 50 * MHz)
 		src_clk = CLK_I2C_SEL_50M;
 	else
 		src_clk = CLK_I2C_SEL_OSC;
@@ -467,6 +465,7 @@ static ulong rk3576_i2c_set_clk(struct rk3576_clk_priv *priv, ulong clk_id,
 	case CLK_I2C8:
 		rk_clrsetreg(&cru->clksel_con[57], CLK_I2C8_SEL_MASK,
 			     src_clk << CLK_I2C8_SEL_SHIFT);
+		break;
 	case CLK_I2C9:
 		rk_clrsetreg(&cru->clksel_con[58], CLK_I2C9_SEL_MASK,
 			     src_clk << CLK_I2C9_SEL_SHIFT);
@@ -688,7 +687,7 @@ static ulong rk3576_adc_set_clk(struct rk3576_clk_priv *priv,
 		} else {
 			src_clk_div = DIV_ROUND_UP(priv->gpll_hz, rate);
 			assert(src_clk_div - 1 <= 255);
-			rk_clrsetreg(&cru->clksel_con[59],
+			rk_clrsetreg(&cru->clksel_con[58],
 				     CLK_SARADC_SEL_MASK |
 				     CLK_SARADC_DIV_MASK,
 				     (CLK_SARADC_SEL_GPLL <<
@@ -700,7 +699,7 @@ static ulong rk3576_adc_set_clk(struct rk3576_clk_priv *priv,
 	case CLK_TSADC:
 		src_clk_div = DIV_ROUND_UP(OSC_HZ, rate);
 		assert(src_clk_div - 1 <= 255);
-		rk_clrsetreg(&cru->clksel_con[58],
+		rk_clrsetreg(&cru->clksel_con[59],
 			     CLK_TSADC_DIV_MASK,
 			     (src_clk_div - 1) <<
 			     CLK_TSADC_DIV_SHIFT);
@@ -1666,7 +1665,7 @@ static ulong rk3576_uart_frac_set_rate(struct rk3576_clk_priv *priv,
 		p_rate = OSC_HZ;
 	} else {
 		clk_src = CLK_UART_SRC_SEL_GPLL;
-		p_rate = priv->cpll_hz;
+		p_rate = priv->gpll_hz;
 	}
 
 	rational_best_approximation(rate, p_rate, GENMASK(16 - 1, 0),
@@ -1794,7 +1793,7 @@ static ulong rk3576_uart_set_rate(struct rk3576_clk_priv *priv,
 		div = DIV_ROUND_UP(priv->gpll_hz, rate);
 	} else if (!(priv->cpll_hz % rate)) {
 		clk_src = CLK_UART_SEL_CPLL;
-		div = DIV_ROUND_UP(priv->gpll_hz, rate);
+		div = DIV_ROUND_UP(priv->cpll_hz, rate);
 	} else if (!(rk3576_uart_frac_get_rate(priv, CLK_UART_FRAC_0) % rate)) {
 		clk_src = CLK_UART_SEL_FRAC0;
 		div = DIV_ROUND_UP(rk3576_uart_frac_get_rate(priv, CLK_UART_FRAC_0), rate);
